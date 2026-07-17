@@ -524,7 +524,8 @@ textarea:focus-visible {
   }
 
   h1 {
-    font-size: 43px;
+    margin-bottom: 8px;
+    font-size: 38px;
   }
 
   .scene-heading-row,
@@ -534,11 +535,85 @@ textarea:focus-visible {
     flex-direction: column;
   }
 
-  .integrity {
-    min-width: 0;
+  .scene-header {
+    padding: 12px 0 20px;
   }
 
-  .locked-variables,
+  .scene-header > .eyebrow {
+    margin-bottom: 7px;
+  }
+
+  .scene-heading-row {
+    gap: 16px;
+  }
+
+  .brief {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .integrity {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+  }
+
+  .integrity-label {
+    margin-bottom: 0;
+  }
+
+  .control-band {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    padding: 14px 0;
+  }
+
+  .control-band-title .eyebrow {
+    display: none;
+  }
+
+  .control-band h2 {
+    font-size: 20px;
+  }
+
+  .changed-variable {
+    padding: 7px 10px;
+  }
+
+  .locked-variables {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px 18px;
+  }
+
+  .locked-variables dt {
+    margin-bottom: 1px;
+    font-size: 9px;
+  }
+
+  .locked-variables dd {
+    font-size: 11px;
+  }
+
+  .takes-section {
+    padding: 28px 0 44px;
+  }
+
+  .section-heading {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .section-heading h2 {
+    font-size: 27px;
+  }
+
+  .section-heading > p {
+    font-size: 14px;
+  }
+
   .packet-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
