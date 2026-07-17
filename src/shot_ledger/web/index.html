@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Controlled dailies and decision packets for generative media.">
+    <title>Shot Ledger</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Shot Ledger home">
+        <span class="brand-mark" aria-hidden="true">SL</span>
+        <span>Shot Ledger</span>
+      </a>
+      <div class="topbar-status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="storage-mode">Loading scene</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="scene-header" aria-labelledby="scene-title">
+        <p class="eyebrow">Controlled dailies / Decision review</p>
+        <div class="scene-heading-row">
+          <div>
+            <h1 id="scene-title">Travel mug lighting study</h1>
+            <p id="brief" class="brief"></p>
+          </div>
+          <div class="integrity" title="The decision packet hash matches its contents">
+            <span class="integrity-label">Packet integrity</span>
+            <strong id="integrity-value">Checking</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-band" aria-labelledby="locked-title">
+        <div class="control-band-title">
+          <p class="eyebrow">What stays fixed</p>
+          <h2 id="locked-title">Scene lock</h2>
+        </div>
+        <dl id="locked-variables" class="locked-variables"></dl>
+        <div class="changed-variable">
+          <span>Testing only</span>
+          <strong>Light direction</strong>
+        </div>
+      </section>
+
+      <section class="takes-section" aria-labelledby="takes-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Three controlled takes</p>
+            <h2 id="takes-title">Choose the frame worth carrying forward</h2>
+          </div>
+          <p>One variable moves. Everything else holds.</p>
+        </div>
+        <div id="take-grid" class="take-grid" role="radiogroup" aria-label="Choose a keeper"></div>
+      </section>
+
+      <section class="decision-band" aria-labelledby="decision-title">
+        <div class="decision-copy">
+          <p class="eyebrow">Human decision</p>
+          <h2 id="decision-title">Why does this take win?</h2>
+          <p>The recipe explains how it was made. Your reason explains why it should survive.</p>
+        </div>
+        <form id="decision-form" class="decision-form">
+          <label for="selection-reason">Selection reason</label>
+          <textarea
+            id="selection-reason"
+            name="selection_reason"
+            rows="3"
+            maxlength="600"
+            required
+            placeholder="Name the visible quality that makes this the keeper."
+          ></textarea>
+          <div class="form-footer">
+            <p id="form-status" role="status" aria-live="polite">Select a take and leave a concrete reason.</p>
+            <div class="form-actions">
+              <a class="button secondary" href="/api/export" download="shot-ledger-decision.json">Download packet</a>
+              <button class="button primary" type="submit">Seal decision</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="packet-band" aria-labelledby="packet-title">
+        <div>
+          <p class="eyebrow">Portable handoff</p>
+          <h2 id="packet-title">How + why, in one receipt</h2>
+        </div>
+        <dl class="packet-facts">
+          <div><dt>Keeper</dt><dd id="packet-keeper">-</dd></div>
+          <div><dt>Rejected siblings</dt><dd id="packet-rejected">-</dd></div>
+          <div><dt>Packet hash</dt><dd><code id="packet-hash">-</code></dd></div>
+        </dl>
+      </section>
+    </main>
+
+    <template id="take-template">
+      <label class="take-card">
+        <input type="radio" name="keeper" value="">
+        <span class="take-image-wrap">
+          <img class="take-image" alt="">
+          <span class="take-number"></span>
+          <span class="take-state"></span>
+        </span>
+        <span class="take-content">
+          <span class="take-title-row">
+            <strong class="take-name"></strong>
+            <span class="choice-indicator" aria-hidden="true"></span>
+          </span>
+          <span class="take-change"></span>
+          <span class="take-meta"></span>
+        </span>
+      </label>
+    </template>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

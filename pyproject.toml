@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shot-ledger"
+version = "0.1.0"
+description = "Controlled dailies and decision packets for generative media"
+requires-python = ">=3.11"
+dependencies = [
+  "genblaze-core>=0.3.6,<0.4",
+  "Pillow>=10",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "ruff>=0.12",
+]
+real = [
+  "genblaze-gmicloud>=0.3.1,<0.4",
+  "genblaze-s3>=0.3.5,<0.4",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+shot_ledger = ["web/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
