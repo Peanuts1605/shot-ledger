@@ -15,12 +15,14 @@ evidence. `PENDING` is not presented as proof.
 | Human review required before real keeper selection | VERIFIED_CODE | Finalization tests and explicit sealing command |
 | Desktop review clarity | VERIFIED_LOCAL | `proof/ui/shot-ledger-desktop.png` |
 | Mobile review clarity | VERIFIED_LOCAL | `proof/ui/shot-ledger-mobile-top.png` and decision capture |
-| Automated test suite | VERIFIED_LOCAL | 26 passing tests, Ruff clean, dependency check clean |
+| Automated test suite | VERIFIED_LOCAL | 27 Python tests and 8 Worker tests pass; Ruff, typecheck, dependency check, and Worker dry-run pass |
 | Public source repository | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger |
+| Read-only synthetic preview | VERIFIED_PUBLIC | https://shot-ledger-preview.gigantic-stranger.workers.dev |
+| Public desktop and mobile layout | VERIFIED_PUBLIC | `proof/ui/shot-ledger-public-preview-desktop-full.png` and mobile capture |
 | Real generation through Genblaze | PENDING | Requires active GMI Cloud account and API key |
 | Private object storage in Backblaze B2 | PENDING | Requires completed B2 account and bucket key |
 | Fresh-process reload of seven B2 objects | PENDING | Runs immediately after the real decision is sealed |
-| Read-only public B2 demo | PENDING | Deploy after real B2 receipt passes |
+| Read-only public B2 demo | PENDING | Promote the verified Worker from synthetic preview to B2 secrets after the real receipt passes |
 | Sub-three-minute demo video | PENDING | Record against the public B2 proof |
 | Devpost submission | PENDING | Register and submit after links and evidence are final |
 

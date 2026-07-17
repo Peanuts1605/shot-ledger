@@ -115,9 +115,15 @@ asset and manifest provenance.
 
 ## Public Demo Deploy
 
-`render.yaml` defines the public read-only review service. It installs only the
-B2 runtime dependency, binds to Render's assigned port, and checks `/healthz`.
-The four B2 values stay in the host's secret environment and are never committed.
+The Cloudflare Worker in `worker/` serves the review UI while private media and
+receipts remain in B2. Its preview deployment uses the explicitly labeled local
+proof; the production environment switches to signed, read-only B2 retrieval.
+The B2 values are encrypted Worker secrets and are never committed. `render.yaml`
+remains a portable Python-host fallback.
+
+- Public preview: https://shot-ledger-preview.gigantic-stranger.workers.dev
+- Preview truth label: synthetic local demonstration, not Genblaze or B2 evidence
+- Production B2 deployment: pending the real provider proof
 
 
 ## Product Documents

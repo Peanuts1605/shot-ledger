@@ -73,10 +73,11 @@ Provenance becomes useful only when it travels with a human decision. A perfect 
 ## Links
 
 - Source: https://github.com/Peanuts1605/shot-ledger
+- Public synthetic preview: https://shot-ledger-preview.gigantic-stranger.workers.dev
 - Public app: PENDING_REAL_B2_DEPLOY
 - Demo video: PENDING
 - B2 verification receipt: PENDING_REAL_PROOF
 
 ## Technologies
 
-Python, Genblaze, Backblaze B2, GMI Cloud, Seedream 5.0 Lite, HTML, CSS, JavaScript
+Python, Genblaze, Backblaze B2, GMI Cloud, Seedream 5.0 Lite, Cloudflare Workers, TypeScript, HTML, CSS, JavaScript

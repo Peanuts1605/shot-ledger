@@ -59,12 +59,27 @@ def main() -> None:
     print(f"B2 decision key: {decision_key}")
     print(f"Keeper: {packet.keeper_take_id}")
     print(f"Packet hash: {packet.packet_hash}")
-    print(f"Receipt: {receipt_path}")
     subprocess.run(
         [sys.executable, "-m", "shot_ledger.verify_b2"],
         check=True,
         env={**os.environ, "SHOT_LEDGER_SCENE_ID": packet.scene_id},
     )
+    verification_path = PROOF_DIR / "b2-reload-verification.json"
+    verification_key = f"shot-ledger/scenes/{packet.scene_id}/verification.json"
+    backend.put(
+        verification_key,
+        verification_path.read_bytes(),
+        content_type="application/json",
+        metadata={"packet-sha256": packet.packet_hash},
+    )
+    receipt["verification_key"] = verification_key
+    receipt["verification_stored"] = True
+    receipt_path.write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    print(f"B2 verification key: {verification_key}")
+    print(f"Receipt: {receipt_path}")
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ flowchart TD
     D --> I["Fresh-process reload verifier"]
     I --> J["Decision hash result"]
     I --> K["Media + manifest result"]
-    D --> L["Read-only public review app"]
+    D --> L["Cloudflare Worker: read-only public review"]
 ```
 
 ## Durable Objects
@@ -33,6 +33,10 @@ flowchart TD
 | Generation state | Attempts, partial failures, preserved successes, and retry scope |
 | Decision packet | Keeper, rejected siblings, human reason, and packet hash |
 | Reload receipt | Independent verification of decision, media, and manifests from B2 |
+
+Cloudflare hosts only the review surface and signs read-only B2 requests at the
+edge. It does not replace B2 as the durable store or Genblaze as the generation
+and provenance layer.
 
 ## Trust Rules
 

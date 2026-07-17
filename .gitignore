@@ -3,6 +3,11 @@
 .venv/
 __pycache__/
 .pytest_cache/
+.wrangler/
+.dev.vars*
+node_modules/
+worker/public/
+worker-configuration.d.ts
 *.pyc
 *.egg-info/
 proof/local/

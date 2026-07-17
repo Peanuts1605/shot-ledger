@@ -100,7 +100,7 @@ function render(scene) {
   byId("seal-decision").disabled = !scene.write_enabled;
   byId("form-status").textContent = scene.write_enabled
     ? "Select a take and leave a concrete reason."
-    : "Public B2 proof is read-only. The sealed decision remains unchanged.";
+    : "Public proof is read-only. The sealed decision remains unchanged.";
   renderLockedVariables(scene.locked_variables);
   renderTakes(scene.takes);
   renderPacket(scene);
