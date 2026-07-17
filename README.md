@@ -5,6 +5,8 @@ Controlled dailies for generative media.
 Shot Ledger gives every approved AI shot a portable handoff that answers two
 questions together: **How was this made? Why did we choose it?**
 
+![Shot Ledger review surface](proof/ui/shot-ledger-desktop.png)
+
 The working product loop is deliberately narrow:
 
 1. Lock one scene brief.
@@ -17,6 +19,22 @@ The working product loop is deliberately narrow:
 This repository begins with a local, zero-credential proof of the decision
 packet. The contest proof must later execute real generation through Genblaze,
 store assets and manifests in Backblaze B2, and reload the ledger from B2.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A["Locked scene brief"] --> B["Genblaze: 3 controlled takes"]
+    B --> C["B2: images + manifests + run state"]
+    C --> D["Human review: keeper + visible reason"]
+    D --> E["B2: sealed decision packet"]
+    E --> F["Fresh-process integrity verifier"]
+    E --> G["Read-only public review"]
+```
+
+Generation never chooses the winner. The human decision is sealed only after
+the three B2-backed takes can be reviewed, and the public proof cannot mutate
+that decision.
 
 ## Local Proof
 
@@ -106,6 +124,8 @@ The four B2 values stay in the host's secret environment and are never committed
 
 - `docs/SHOT_LEDGER_PRODUCT_BET_2026-07-17.md`
 - `docs/SHOT_LEDGER_ONE_DAY_PROOF_CONTRACT_2026-07-17.md`
+- `docs/ARCHITECTURE.md`
+- `docs/SUBMISSION_EVIDENCE_MATRIX.md`
 
 ## Contest
 
