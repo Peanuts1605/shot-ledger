@@ -44,6 +44,11 @@ def scene_payload(
     payload["integrity"] = "hash matches" if verify_packet(packet) else "hash mismatch"
     payload["media_integrity"] = verify_scene(repository, packet).to_dict()
     payload["storage_mode"] = repository.storage_mode
+    payload["proof_scope"] = (
+        "Synthetic local demonstration - not Genblaze or B2 provider evidence"
+        if repository.storage_mode == "local proof"
+        else "Live provider evidence reloaded from Backblaze B2"
+    )
     payload["write_enabled"] = write_enabled
     return payload
 

@@ -52,6 +52,7 @@ def test_local_review_never_claims_b2_from_environment_alone(monkeypatch, tmp_pa
     assert payload["storage_mode"] == "local proof"
     assert payload["integrity"] == "hash matches"
     assert payload["media_integrity"]["status"] == "not verified"
+    assert payload["proof_scope"].startswith("Synthetic local demonstration")
     assert payload["write_enabled"]
 
 
