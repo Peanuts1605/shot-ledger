@@ -16,6 +16,7 @@ class Take:
     prompt: str
     provider: str
     model: str
+    parameters: dict[str, Any]
     asset_uri: str
     asset_sha256: str
     manifest_hash: str
@@ -118,24 +119,33 @@ def verify_packet(packet: DecisionPacket) -> bool:
     return hashlib.sha256(_canonical_bytes(payload)).hexdigest() == expected_hash
 
 
-def decision_packet_from_dict(payload: dict[str, Any]) -> DecisionPacket:
-    takes = tuple(
-        Take(
-            take_id=take["take_id"],
-            changed_variable=take["changed_variable"],
-            changed_value=take["changed_value"],
-            prompt=take["prompt"],
-            provider=take["provider"],
-            model=take["model"],
-            asset_uri=take["asset_uri"],
-            asset_sha256=take["asset_sha256"],
-            manifest_hash=take["manifest_hash"],
-            manifest_uri=take["manifest_uri"],
-        )
-        for take in payload["takes"]
+def take_from_dict(take: dict[str, Any]) -> Take:
+    return Take(
+        take_id=take["take_id"],
+        changed_variable=take["changed_variable"],
+        changed_value=take["changed_value"],
+        prompt=take["prompt"],
+        provider=take["provider"],
+        model=take["model"],
+        parameters=dict(take["parameters"]),
+        asset_uri=take["asset_uri"],
+        asset_sha256=take["asset_sha256"],
+        manifest_hash=take["manifest_hash"],
+        manifest_uri=take["manifest_uri"],
     )
+
+
+def decision_packet_from_dict(payload: dict[str, Any]) -> DecisionPacket:
+    takes = tuple(take_from_dict(take) for take in payload["takes"])
     if len(takes) != 3:
         raise ValueError("stored packet must contain exactly three takes")
+
+    for take_payload in payload["takes"]:
+        expected_status = (
+            "keeper" if take_payload["take_id"] == payload["keeper_take_id"] else "rejected"
+        )
+        if take_payload.get("status") != expected_status:
+            raise ValueError("stored take status conflicts with keeper selection")
 
     packet = DecisionPacket(
         scene_id=payload["scene_id"],

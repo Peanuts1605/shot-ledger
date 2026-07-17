@@ -27,10 +27,23 @@
             <h1 id="scene-title">Travel mug lighting study</h1>
             <p id="brief" class="brief"></p>
           </div>
-          <div class="integrity" title="The decision packet hash matches its contents">
-            <span class="integrity-label">Packet integrity</span>
-            <strong id="integrity-value">Checking</strong>
+          <div class="integrity" title="The decision record hash matches its contents">
+            <span class="integrity-label">Decision record</span>
+            <strong id="integrity-value">Checking hash</strong>
+            <span class="integrity-label integrity-label-secondary">Media + provenance</span>
+            <strong id="media-integrity-value">Checking files</strong>
           </div>
+        </div>
+      </section>
+
+      <section id="recovery-panel" class="recovery-panel" aria-labelledby="recovery-title" hidden>
+        <p class="eyebrow">Generation recovery</p>
+        <h2 id="recovery-title">Generation paused, not lost.</h2>
+        <p id="recovery-summary" class="recovery-summary"></p>
+        <ol id="recovery-slots" class="recovery-slots"></ol>
+        <div class="recovery-command">
+          <span>Operator retry</span>
+          <code id="recovery-command"></code>
         </div>
       </section>
 
@@ -77,7 +90,7 @@
             <p id="form-status" role="status" aria-live="polite">Select a take and leave a concrete reason.</p>
             <div class="form-actions">
               <a class="button secondary" href="/api/export" download="shot-ledger-decision.json">Download packet</a>
-              <button class="button primary" type="submit">Seal decision</button>
+              <button id="seal-decision" class="button primary" type="submit">Seal decision</button>
             </div>
           </div>
         </form>

@@ -117,8 +117,7 @@ person reproduce, approve, or branch the work.
 
 ## Decision
 
-GO_WITH_REFRAME.
+GO_WITH_PATCH.
 
 Build the one-day proof. Do not commit to a full contest entry until the real
 Genblaze-to-B2 chain and the decision-handoff test both pass.
-

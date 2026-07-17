@@ -14,22 +14,37 @@ BRIEF = (
 )
 
 LIGHTING_TAKES = (
-    ("take-a", "left window light", "#d8eef2", "#18343a"),
-    ("take-b", "overhead softbox", "#f3efe4", "#2a302f"),
-    ("take-c", "low side light", "#202a2b", "#e5b85c"),
+    ("take-a", "left window light"),
+    ("take-b", "overhead softbox"),
+    ("take-c", "low side light"),
 )
 
 
-def _create_take_image(path: Path, background: str, accent: str, label: str) -> str:
-    image = Image.new("RGB", (800, 1000), background)
+def _create_take_image(path: Path, lighting: str) -> str:
+    image = Image.new("RGB", (800, 1000), "#edeae2")
     draw = ImageDraw.Draw(image)
+
+    shadow_shapes = {
+        "left window light": (330, 690, 620, 748),
+        "overhead softbox": (255, 700, 560, 760),
+        "low side light": (180, 690, 470, 748),
+    }
+    draw.ellipse(shadow_shapes[lighting], fill="#d3d0c8")
     draw.rounded_rectangle(
-        (270, 250, 545, 720), radius=46, fill="#b8c0c2", outline=accent, width=10
+        (270, 250, 545, 720), radius=46, fill="#b8c0c2", outline="#263538", width=10
     )
     draw.rounded_rectangle((315, 210, 500, 285), radius=24, fill="#747d80")
-    draw.ellipse((490, 365, 650, 590), outline=accent, width=24)
-    draw.rectangle((90, 850, 710, 856), fill=accent)
-    draw.text((90, 885), label.upper(), fill=accent)
+    draw.ellipse((490, 365, 650, 590), outline="#263538", width=24)
+
+    if lighting == "left window light":
+        draw.line((292, 330, 292, 650), fill="#f8f7f1", width=14)
+    elif lighting == "overhead softbox":
+        draw.line((330, 300, 490, 300), fill="#f8f7f1", width=14)
+    else:
+        draw.line((525, 520, 525, 655), fill="#f8f7f1", width=14)
+
+    draw.rectangle((90, 850, 710, 856), fill="#263538")
+    draw.text((90, 885), lighting.upper(), fill="#263538")
     image.save(path, format="PNG")
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -38,15 +53,19 @@ def run(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     takes: list[Take] = []
 
-    for take_id, lighting, background, accent in LIGHTING_TAKES:
+    for take_id, lighting in LIGHTING_TAKES:
         image_path = output_dir / f"{take_id}.png"
-        asset_hash = _create_take_image(image_path, background, accent, lighting)
+        asset_hash = _create_take_image(image_path, lighting)
         prompt = f"{BRIEF} Lighting: {lighting}."
+        parameters = {
+            "width": 800,
+            "height": 1000,
+        }
         step = (
             StepBuilder("local-proof", "deterministic-pillow-v1")
             .prompt(prompt)
             .modality(Modality.IMAGE)
-            .params(width=800, height=1000, changed_variable="light_direction")
+            .params(**parameters)
             .status(StepStatus.SUCCEEDED)
             .asset(image_path.resolve().as_uri(), "image/png", sha256=asset_hash)
             .build()
@@ -64,6 +83,7 @@ def run(output_dir: Path) -> None:
                 prompt=prompt,
                 provider="local-proof",
                 model="deterministic-pillow-v1",
+                parameters=parameters,
                 asset_uri=image_path.resolve().as_uri(),
                 asset_sha256=asset_hash,
                 manifest_hash=manifest.canonical_hash,

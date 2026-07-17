@@ -4,7 +4,12 @@ from dataclasses import replace
 
 import pytest
 
-from shot_ledger.decision import Take, build_decision_packet, verify_packet
+from shot_ledger.decision import (
+    Take,
+    build_decision_packet,
+    decision_packet_from_dict,
+    verify_packet,
+)
 
 
 def make_take(take_id: str, changed_value: str) -> Take:
@@ -16,6 +21,7 @@ def make_take(take_id: str, changed_value: str) -> Take:
         prompt=f"Travel mug with {changed_value}",
         provider="proof",
         model="proof-v1",
+        parameters={"size": "800x1000", "changed_value": changed_value},
         asset_uri=f"file:///{take_id}.png",
         asset_sha256=digest,
         manifest_hash=digest,
@@ -77,3 +83,11 @@ def test_packet_detects_tampering():
     tampered = replace(packet, selection_reason="A different reason.")
 
     assert not verify_packet(tampered)
+
+
+def test_stored_status_must_match_keeper():
+    payload = make_packet().to_dict()
+    payload["takes"][0]["status"] = "rejected"
+
+    with pytest.raises(ValueError, match="status conflicts"):
+        decision_packet_from_dict(payload)

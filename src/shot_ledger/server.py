@@ -8,13 +8,18 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from .b2_store import GenerationStore
 from .decision import DecisionPacket, verify_packet
-from .review import load_packet, revise_decision, save_packet
+from .generation_state import GenerationState, generation_state_from_dict
+from .repository import ReviewRepository, repository_from_env
+from .review import revise_decision
+from .verification import verify_scene
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 WEB_ROOT = Path(__file__).resolve().parent / "web"
 PROOF_ROOT = PROJECT_ROOT / "proof" / "local"
 PACKET_PATH = PROOF_ROOT / "decision.json"
+REAL_PROOF_ROOT = PROJECT_ROOT / "proof" / "real"
 
 CONTENT_TYPES = {
     ".css": "text/css; charset=utf-8",
@@ -25,13 +30,64 @@ CONTENT_TYPES = {
 }
 
 
-def scene_payload(packet: DecisionPacket) -> dict[str, Any]:
+def scene_payload(
+    packet: DecisionPacket,
+    repository: ReviewRepository,
+    *,
+    write_enabled: bool = True,
+) -> dict[str, Any]:
     payload = packet.to_dict()
-    for take in payload["takes"]:
-        take["preview_url"] = f"/proof/{take['take_id']}.png"
-    payload["integrity"] = "verified" if verify_packet(packet) else "failed"
-    payload["storage_mode"] = "local proof"
+    takes_by_id = {take.take_id: take for take in packet.takes}
+    for take_payload in payload["takes"]:
+        take = takes_by_id[take_payload["take_id"]]
+        take_payload["preview_url"] = repository.preview_url(take)
+    payload["integrity"] = "hash matches" if verify_packet(packet) else "hash mismatch"
+    payload["media_integrity"] = verify_scene(repository, packet).to_dict()
+    payload["storage_mode"] = repository.storage_mode
+    payload["write_enabled"] = write_enabled
     return payload
+
+
+def generation_payload(state: GenerationState, storage_mode: str) -> dict[str, Any]:
+    payload = state.to_dict()
+    payload.update(
+        {
+            "complete": state.complete,
+            "pending_take_ids": list(state.pending_take_ids),
+            "succeeded_count": len(state.successful_takes),
+            "storage_mode": storage_mode,
+            "retry_command": "python -m shot_ledger.retry_real_proof",
+        }
+    )
+    return payload
+
+
+def generation_state_from_env() -> tuple[GenerationState, str]:
+    mode = os.environ.get("SHOT_LEDGER_STORAGE_MODE", "local").strip().lower()
+    if mode == "b2":
+        scene_id = os.environ.get("SHOT_LEDGER_SCENE_ID", "").strip()
+        if not scene_id:
+            raise RuntimeError("SHOT_LEDGER_SCENE_ID is required in B2 mode")
+        return GenerationStore.from_backblaze_env().load(scene_id), "Backblaze B2"
+    path = Path(
+        os.environ.get(
+            "SHOT_LEDGER_GENERATION_STATE_PATH",
+            REAL_PROOF_ROOT / "generation-state.json",
+        )
+    )
+    return generation_state_from_dict(json.loads(path.read_text(encoding="utf-8"))), "local proof"
+
+
+class ShotLedgerServer(ThreadingHTTPServer):
+    def __init__(
+        self,
+        server_address: tuple[str, int],
+        repository: ReviewRepository,
+        write_enabled: bool,
+    ) -> None:
+        self.repository = repository
+        self.write_enabled = write_enabled
+        super().__init__(server_address, ShotLedgerHandler)
 
 
 class ShotLedgerHandler(BaseHTTPRequestHandler):
@@ -39,6 +95,20 @@ class ShotLedgerHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format: str, *args: object) -> None:
         return
+
+    @property
+    def repository(self) -> ReviewRepository:
+        server = self.server
+        if not isinstance(server, ShotLedgerServer):
+            raise RuntimeError("Shot Ledger server repository is unavailable")
+        return server.repository
+
+    @property
+    def write_enabled(self) -> bool:
+        server = self.server
+        if not isinstance(server, ShotLedgerServer):
+            return False
+        return server.write_enabled
 
     def _send_bytes(self, body: bytes, content_type: str, status: int = HTTPStatus.OK) -> None:
         self.send_response(status)
@@ -68,16 +138,38 @@ class ShotLedgerHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         path = urlparse(self.path).path
         if path == "/api/scene":
-            if not PACKET_PATH.exists():
+            try:
                 self._send_json(
-                    {"error": "run python -m shot_ledger.proof_local first"},
-                    HTTPStatus.SERVICE_UNAVAILABLE,
+                    scene_payload(
+                        self.repository.load(),
+                        self.repository,
+                        write_enabled=self.write_enabled,
+                    )
                 )
-                return
-            self._send_json(scene_payload(load_packet(PACKET_PATH)))
+            except (FileNotFoundError, RuntimeError, ValueError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.SERVICE_UNAVAILABLE)
+            return
+        if path == "/api/run-state":
+            try:
+                state, storage_mode = generation_state_from_env()
+                self._send_json(generation_payload(state, storage_mode))
+            except (FileNotFoundError, KeyError, RuntimeError, TypeError, ValueError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.NOT_FOUND)
             return
         if path == "/api/export":
-            self._serve_file(PACKET_PATH, PROOF_ROOT)
+            try:
+                self._send_json(self.repository.load().to_dict())
+            except (FileNotFoundError, RuntimeError, ValueError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.SERVICE_UNAVAILABLE)
+            return
+        if path.startswith("/api/assets/"):
+            take_id = path.removeprefix("/api/assets/")
+            try:
+                packet = self.repository.load()
+                take = next(take for take in packet.takes if take.take_id == take_id)
+                self._send_bytes(self.repository.read_asset(take), "image/png")
+            except (FileNotFoundError, RuntimeError, StopIteration, ValueError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.NOT_FOUND)
             return
         if path.startswith("/proof/"):
             self._serve_file(PROOF_ROOT / path.removeprefix("/proof/"), PROOF_ROOT)
@@ -90,30 +182,46 @@ class ShotLedgerHandler(BaseHTTPRequestHandler):
         if urlparse(self.path).path != "/api/decision":
             self._send_json({"error": "not found"}, HTTPStatus.NOT_FOUND)
             return
+        if not self.write_enabled:
+            self._send_json(
+                {"error": "public B2 proof is read-only"},
+                HTTPStatus.FORBIDDEN,
+            )
+            return
         try:
             content_length = int(self.headers.get("Content-Length", "0"))
             if content_length < 2 or content_length > 16_384:
                 raise ValueError("invalid request size")
             request = json.loads(self.rfile.read(content_length))
-            packet = load_packet(PACKET_PATH)
+            packet = self.repository.load()
             revised = revise_decision(
                 packet,
                 keeper_take_id=str(request.get("keeper_take_id", "")),
                 selection_reason=str(request.get("selection_reason", "")),
             )
-            save_packet(revised, PROOF_ROOT)
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+            self.repository.save(revised)
+        except (
+            FileNotFoundError,
+            KeyError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+            json.JSONDecodeError,
+        ) as error:
             self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
             return
-        self._send_json(scene_payload(revised))
+        self._send_json(scene_payload(revised, self.repository, write_enabled=True))
 
 
 def main() -> None:
     host = os.environ.get("SHOT_LEDGER_HOST", "127.0.0.1")
     port = int(os.environ.get("SHOT_LEDGER_PORT", "4173"))
-    if not PACKET_PATH.exists():
+    mode = os.environ.get("SHOT_LEDGER_STORAGE_MODE", "local").strip().lower()
+    if mode == "local" and not PACKET_PATH.exists():
         raise RuntimeError("run python -m shot_ledger.proof_local before starting the app")
-    server = ThreadingHTTPServer((host, port), ShotLedgerHandler)
+    repository = repository_from_env(PACKET_PATH, PROOF_ROOT)
+    write_enabled = mode == "local" or os.environ.get("SHOT_LEDGER_ALLOW_B2_WRITES") == "true"
+    server = ShotLedgerServer((host, port), repository, write_enabled)
     print(f"Shot Ledger: http://{host}:{port}")
     try:
         server.serve_forever()

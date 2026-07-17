@@ -37,6 +37,7 @@ function renderTakes(takes) {
     const image = fragment.querySelector("img");
     input.value = take.take_id;
     input.checked = take.take_id === state.keeperTakeId;
+    input.disabled = state.scene.write_enabled === false;
     input.addEventListener("change", () => {
       state.keeperTakeId = take.take_id;
       renderTakes(state.scene.takes);
@@ -69,18 +70,59 @@ function render(scene) {
   state.keeperTakeId = scene.keeper_take_id;
   byId("brief").textContent = scene.brief;
   byId("integrity-value").textContent = titleCase(scene.integrity);
-  byId("storage-mode").textContent = `${titleCase(scene.storage_mode)} / ${scene.scene_id}`;
+  byId("media-integrity-value").textContent = titleCase(scene.media_integrity.status);
+  byId("storage-mode").textContent = titleCase(scene.storage_mode);
+  byId("storage-mode").title = scene.scene_id;
   byId("selection-reason").value = scene.selection_reason;
+  byId("selection-reason").disabled = !scene.write_enabled;
+  byId("seal-decision").disabled = !scene.write_enabled;
+  byId("form-status").textContent = scene.write_enabled
+    ? "Select a take and leave a concrete reason."
+    : "Public B2 proof is read-only. The sealed decision remains unchanged.";
   renderLockedVariables(scene.locked_variables);
   renderTakes(scene.takes);
   renderPacket(scene);
 }
 
+function renderRecovery(runState) {
+  document.body.classList.add("recovery-mode");
+  byId("brief").textContent = runState.brief;
+  byId("integrity-value").textContent = "State Saved";
+  byId("media-integrity-value").textContent = "Partial";
+  byId("storage-mode").textContent = titleCase(runState.storage_mode);
+  byId("storage-mode").title = runState.scene_id;
+  byId("recovery-summary").textContent = `${runState.succeeded_count} of 3 takes have durable media and provenance. Completed siblings will not run again.`;
+  byId("recovery-command").textContent = runState.retry_command;
+  const slots = byId("recovery-slots");
+  slots.replaceChildren();
+  for (const slot of runState.slots) {
+    const item = document.createElement("li");
+    const heading = document.createElement("strong");
+    const status = document.createElement("span");
+    const reason = document.createElement("p");
+    heading.textContent = `${titleCase(slot.take_id)} / ${slot.changed_value}`;
+    status.textContent = `${titleCase(slot.status)} / ${slot.attempts} attempt${slot.attempts === 1 ? "" : "s"}`;
+    reason.textContent = slot.failure_reason || (slot.status === "succeeded" ? "Durable asset and manifest preserved." : "Waiting to run.");
+    item.dataset.status = slot.status;
+    item.append(heading, status, reason);
+    slots.append(item);
+  }
+  byId("recovery-panel").hidden = false;
+}
+
 async function loadScene() {
-  const response = await fetch("/api/scene", { cache: "no-store" });
-  const payload = await response.json();
-  if (!response.ok) throw new Error(payload.error || "Could not load the scene");
-  render(payload);
+  const [sceneResponse, runResponse] = await Promise.all([
+    fetch("/api/scene", { cache: "no-store" }),
+    fetch("/api/run-state", { cache: "no-store" }),
+  ]);
+  const runState = await runResponse.json();
+  if (runResponse.ok && !runState.complete) {
+    renderRecovery(runState);
+    return;
+  }
+  const scene = await sceneResponse.json();
+  if (!sceneResponse.ok) throw new Error(scene.error || "Could not load the scene");
+  render(scene);
 }
 
 byId("decision-form").addEventListener("submit", async (event) => {
@@ -104,7 +146,7 @@ byId("decision-form").addEventListener("submit", async (event) => {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "Decision was not saved");
     render(payload);
-    status.textContent = `Decision sealed. Packet ${shortHash(payload.packet_hash)} verified.`;
+    status.textContent = `Decision sealed. Hash ${shortHash(payload.packet_hash)} recorded.`;
   } catch (error) {
     status.textContent = error.message;
   }

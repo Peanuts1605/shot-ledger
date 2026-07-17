@@ -41,6 +41,23 @@ Open `http://127.0.0.1:4173`. The app compares the controlled takes, records a
 keeper and concrete selection reason, recomputes the tamper-evident packet, and
 exports the complete handoff.
 
+After the real proof exists in B2, run the same app against durable storage:
+
+```bash
+export SHOT_LEDGER_STORAGE_MODE=b2
+export SHOT_LEDGER_SCENE_ID=public-safe-travel-mug-001
+.venv/bin/python -m shot_ledger.server
+```
+
+In B2 mode, scene load, private-image reads, decision updates, and packet export
+all go through the configured bucket. B2 credentials and expiring signed URLs
+are never written into the decision packet.
+
+Public B2 deployments are read-only by default so an anonymous visitor cannot
+overwrite the shared keeper. An authenticated operator environment can opt in
+to writes with `SHOT_LEDGER_ALLOW_B2_WRITES=true`; local proof mode remains
+interactive without that flag.
+
 ## Real Genblaze to B2 Proof
 
 The real proof reads credentials only from environment variables. Install the
@@ -53,8 +70,20 @@ and run:
 ```
 
 The command generates three controlled takes through Genblaze, stores every
-asset and manifest in B2, writes the decision packet, then creates a fresh B2
-client and reloads the packet without local state.
+asset and manifest in B2, writes the decision packet, then launches a separate
+verification process. That process reloads the packet, all three private image
+objects, and all three Genblaze manifests from B2 before it writes
+`proof/real/b2-reload-verification.json`.
+
+If one provider call fails, Shot Ledger saves the successful siblings and a
+hashed generation-state receipt. Resume with:
+
+```bash
+.venv/bin/python -m shot_ledger.retry_real_proof
+```
+
+Only failed or pending takes run again; completed takes retain their original
+asset and manifest provenance.
 
 
 ## Product Documents

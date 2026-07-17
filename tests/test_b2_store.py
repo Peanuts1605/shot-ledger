@@ -4,8 +4,9 @@ from dataclasses import replace
 
 from test_decision import make_take
 
-from shot_ledger.b2_store import DecisionStore
+from shot_ledger.b2_store import DecisionStore, GenerationStore
 from shot_ledger.decision import build_decision_packet
+from shot_ledger.generation_state import GenerationSlot, build_generation_state
 
 
 class MemoryBackend:
@@ -69,3 +70,36 @@ def test_store_rejects_tampered_packet():
         assert "invalid decision packet" in str(error)
     else:
         raise AssertionError("tampered packet was stored")
+
+
+def test_generation_store_preserves_successes_and_failed_retry_slot():
+    backend = MemoryBackend()
+    packet = make_packet()
+    state = build_generation_state(
+        scene_id=packet.scene_id,
+        brief=packet.brief,
+        locked_variables=packet.locked_variables,
+        changed_variable="light_direction",
+        slots=[
+            GenerationSlot("a", "window", "succeeded", 1, take=packet.takes[0]),
+            GenerationSlot(
+                "b",
+                "overhead",
+                "failed",
+                1,
+                error_code="timeout",
+                failure_reason="Retry only this take.",
+            ),
+            GenerationSlot("c", "side", "succeeded", 1, take=packet.takes[2]),
+        ],
+        updated_at="2026-07-17T12:00:00+00:00",
+    )
+
+    key = GenerationStore(backend).save(state)
+    reloaded = GenerationStore(backend).load(packet.scene_id)
+
+    assert key == "shot-ledger/scenes/scene-001/generation-state.json"
+    assert reloaded == state
+    assert reloaded.pending_take_ids == ("b",)
+    assert [take.take_id for take in reloaded.successful_takes] == ["a", "c"]
+    assert backend.metadata[key]["state-sha256"] == state.state_hash
