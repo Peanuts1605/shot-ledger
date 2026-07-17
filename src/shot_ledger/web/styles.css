@@ -163,6 +163,72 @@ h2 {
   border-bottom: 1px solid var(--line);
 }
 
+.selected-receipt {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.55fr) minmax(0, 2.45fr);
+  gap: 18px 32px;
+  padding: 24px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.selected-receipt-heading h2 {
+  font-size: 24px;
+}
+
+.receipt-state {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 5px 8px;
+  background: var(--teal-soft);
+  color: var(--teal);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.proof-scope {
+  grid-column: 2;
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--mustard);
+  background: #fff9e9;
+  color: #65460f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.selected-receipt-facts {
+  display: grid;
+  grid-column: 2;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 22px;
+  margin: 0;
+}
+
+.selected-receipt-facts div {
+  min-width: 0;
+}
+
+.selected-receipt-facts dt {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.selected-receipt-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.selected-receipt-facts .receipt-wide {
+  grid-column: span 2;
+}
+
 .recovery-panel {
   margin: 0 0 44px;
   padding: 32px;
@@ -240,6 +306,7 @@ h2 {
 }
 
 .recovery-mode .control-band,
+.recovery-mode .selected-receipt,
 .recovery-mode .takes-section,
 .recovery-mode .decision-band,
 .recovery-mode .packet-band {
@@ -578,14 +645,21 @@ textarea:disabled {
 @media (max-width: 900px) {
   .control-band,
   .decision-band,
-  .packet-band {
+  .packet-band,
+  .selected-receipt {
     grid-template-columns: 1fr;
   }
 
   .control-band,
   .decision-band,
-  .packet-band {
+  .packet-band,
+  .selected-receipt {
     gap: 24px;
+  }
+
+  .proof-scope,
+  .selected-receipt-facts {
+    grid-column: 1;
   }
 
   .take-grid {
@@ -679,6 +753,44 @@ textarea:disabled {
     grid-template-columns: 1fr auto;
     gap: 12px;
     padding: 12px 0;
+  }
+
+  .selected-receipt {
+    gap: 12px;
+    padding: 16px 0;
+  }
+
+  .selected-receipt-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .selected-receipt-heading .eyebrow {
+    display: none;
+  }
+
+  .selected-receipt-heading h2 {
+    font-size: 20px;
+  }
+
+  .receipt-state {
+    margin-top: 0;
+  }
+
+  .proof-scope {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .selected-receipt-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px 14px;
+  }
+
+  .selected-receipt-facts .receipt-wide {
+    grid-column: 1 / -1;
   }
 
   .control-band-title .eyebrow {

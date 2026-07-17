@@ -1,6 +1,8 @@
 const state = {
   scene: null,
   keeperTakeId: null,
+  sealedKeeperTakeId: null,
+  sealedReason: null,
 };
 
 const byId = (id) => document.getElementById(id);
@@ -42,6 +44,7 @@ function renderTakes(takes) {
       state.keeperTakeId = take.take_id;
       renderTakes(state.scene.takes);
       renderPacket(state.scene);
+      renderSelectedReceipt();
       byId("form-status").textContent = `${titleCase(take.take_id)} selected. Add the reason it wins.`;
     });
     image.src = take.preview_url;
@@ -65,15 +68,34 @@ function renderPacket(scene) {
   byId("packet-hash").textContent = scene.packet_hash;
 }
 
+function renderSelectedReceipt() {
+  const take = state.scene.takes.find((candidate) => candidate.take_id === state.keeperTakeId);
+  if (!take) return;
+  const reason = byId("selection-reason").value.trim();
+  const sealed = state.keeperTakeId === state.sealedKeeperTakeId && reason === state.sealedReason;
+  byId("receipt-state").textContent = sealed ? "Sealed" : "Draft change";
+  byId("receipt-take").textContent = `${titleCase(take.take_id)} / ${take.changed_value}`;
+  byId("receipt-provider").textContent = `${take.provider} / ${take.model}`;
+  byId("receipt-storage").textContent = titleCase(state.scene.storage_mode);
+  byId("receipt-prompt").textContent = take.prompt;
+  byId("receipt-parameters").textContent = Object.entries(take.parameters)
+    .map(([key, value]) => `${key}=${value}`)
+    .join(" / ");
+  byId("receipt-reason").textContent = reason || "Reason not recorded";
+}
+
 function render(scene) {
   state.scene = scene;
   state.keeperTakeId = scene.keeper_take_id;
+  state.sealedKeeperTakeId = scene.keeper_take_id;
+  state.sealedReason = scene.selection_reason;
   byId("brief").textContent = scene.brief;
   byId("integrity-value").textContent = titleCase(scene.integrity);
   byId("media-integrity-value").textContent = titleCase(scene.media_integrity.status);
   byId("storage-mode").textContent = titleCase(scene.storage_mode);
   byId("storage-mode").title = scene.scene_id;
   byId("selection-reason").value = scene.selection_reason;
+  byId("proof-scope").textContent = scene.proof_scope;
   byId("selection-reason").disabled = !scene.write_enabled;
   byId("seal-decision").disabled = !scene.write_enabled;
   byId("form-status").textContent = scene.write_enabled
@@ -82,6 +104,7 @@ function render(scene) {
   renderLockedVariables(scene.locked_variables);
   renderTakes(scene.takes);
   renderPacket(scene);
+  renderSelectedReceipt();
 }
 
 function renderRecovery(runState) {
@@ -150,6 +173,10 @@ byId("decision-form").addEventListener("submit", async (event) => {
   } catch (error) {
     status.textContent = error.message;
   }
+});
+
+byId("selection-reason").addEventListener("input", () => {
+  if (state.scene) renderSelectedReceipt();
 });
 
 loadScene().catch((error) => {

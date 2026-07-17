@@ -36,6 +36,23 @@
         </div>
       </section>
 
+      <section class="selected-receipt" aria-labelledby="selected-receipt-title">
+        <div class="selected-receipt-heading">
+          <p class="eyebrow">Selected take receipt</p>
+          <h2 id="selected-receipt-title">Keeper evidence</h2>
+          <strong id="receipt-state" class="receipt-state">Sealed</strong>
+        </div>
+        <p id="proof-scope" class="proof-scope"></p>
+        <dl class="selected-receipt-facts">
+          <div><dt>Take</dt><dd id="receipt-take">-</dd></div>
+          <div><dt>Provider / model</dt><dd id="receipt-provider">-</dd></div>
+          <div><dt>Storage</dt><dd id="receipt-storage">-</dd></div>
+          <div class="receipt-wide"><dt>Prompt</dt><dd id="receipt-prompt">-</dd></div>
+          <div><dt>Parameters</dt><dd id="receipt-parameters">-</dd></div>
+          <div class="receipt-wide"><dt>Human reason</dt><dd id="receipt-reason">-</dd></div>
+        </dl>
+      </section>
+
       <section id="recovery-panel" class="recovery-panel" aria-labelledby="recovery-title" hidden>
         <p class="eyebrow">Generation recovery</p>
         <h2 id="recovery-title">Generation paused, not lost.</h2>
@@ -90,7 +107,7 @@
             <p id="form-status" role="status" aria-live="polite">Select a take and leave a concrete reason.</p>
             <div class="form-actions">
               <a class="button secondary" href="/api/export" download="shot-ledger-decision.json">Download packet</a>
-              <button id="seal-decision" class="button primary" type="submit">Seal decision</button>
+              <button id="seal-decision" class="button primary" type="submit">Reseal decision</button>
             </div>
           </div>
         </form>
