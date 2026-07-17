@@ -7,11 +7,31 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .b2_store import DecisionStore, GenerationStore
+from .b2_store import DecisionStore, GenerationStore, ObjectBackend
 from .finalize import build_reviewed_decision
 
 DEFAULT_SCENE_ID = "public-safe-travel-mug-001"
 PROOF_DIR = Path(__file__).resolve().parents[2] / "proof" / "real"
+
+
+def publish_verification_receipt(
+    backend: ObjectBackend,
+    *,
+    scene_id: str,
+    packet_hash: str,
+    verification_path: Path,
+) -> str:
+    payload = json.loads(verification_path.read_text(encoding="utf-8"))
+    if payload.get("packet_hash") != packet_hash or payload.get("verified") is not True:
+        raise ValueError("refusing to publish a verification receipt that does not match")
+    verification_key = f"shot-ledger/scenes/{scene_id}/verification.json"
+    backend.put(
+        verification_key,
+        verification_path.read_bytes(),
+        content_type="application/json",
+        metadata={"packet-sha256": packet_hash},
+    )
+    return verification_key
 
 
 def _arguments() -> argparse.Namespace:
@@ -65,12 +85,11 @@ def main() -> None:
         env={**os.environ, "SHOT_LEDGER_SCENE_ID": packet.scene_id},
     )
     verification_path = PROOF_DIR / "b2-reload-verification.json"
-    verification_key = f"shot-ledger/scenes/{packet.scene_id}/verification.json"
-    backend.put(
-        verification_key,
-        verification_path.read_bytes(),
-        content_type="application/json",
-        metadata={"packet-sha256": packet.packet_hash},
+    verification_key = publish_verification_receipt(
+        backend,
+        scene_id=packet.scene_id,
+        packet_hash=packet.packet_hash,
+        verification_path=verification_path,
     )
     receipt["verification_key"] = verification_key
     receipt["verification_stored"] = True

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import pytest
-from test_b2_store import make_packet
+from test_b2_store import MemoryBackend, make_packet
 
 from shot_ledger.finalize import build_reviewed_decision
+from shot_ledger.finalize_real_proof import publish_verification_receipt
 from shot_ledger.generation_state import GenerationSlot, build_generation_state
 
 
@@ -44,4 +45,40 @@ def test_build_reviewed_decision_refuses_partial_generation():
             _state(complete=False),
             keeper_take_id="a",
             selection_reason="The handle remains readable.",
+        )
+
+
+def test_publish_verification_receipt_requires_matching_verified_packet(tmp_path):
+    backend = MemoryBackend()
+    path = tmp_path / "verification.json"
+    path.write_text(
+        '{"packet_hash":"packet-123","verified":true}\n',
+        encoding="utf-8",
+    )
+
+    key = publish_verification_receipt(
+        backend,
+        scene_id="scene-001",
+        packet_hash="packet-123",
+        verification_path=path,
+    )
+
+    assert key == "shot-ledger/scenes/scene-001/verification.json"
+    assert backend.objects[key] == path.read_bytes()
+    assert backend.metadata[key]["packet-sha256"] == "packet-123"
+
+
+def test_publish_verification_receipt_rejects_stale_packet(tmp_path):
+    path = tmp_path / "verification.json"
+    path.write_text(
+        '{"packet_hash":"old-packet","verified":true}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="does not match"):
+        publish_verification_receipt(
+            MemoryBackend(),
+            scene_id="scene-001",
+            packet_hash="new-packet",
+            verification_path=path,
         )

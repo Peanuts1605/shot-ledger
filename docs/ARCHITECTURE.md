@@ -44,6 +44,7 @@ and provenance layer.
 - A partial run cannot be sealed.
 - Retry touches only failed or pending takes.
 - Decision integrity and media/provenance integrity are reported separately.
+- The public edge serves B2 media only when the decision packet and independent verification receipt match.
 - The public deployment is read-only by default.
 - Credentials and signed URLs never enter the decision packet.
 
