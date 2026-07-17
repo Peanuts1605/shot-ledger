@@ -177,7 +177,7 @@ async function b2Api(env: Env, path: string): Promise<Response> {
     );
     return new Response(response.body, {
       headers: {
-        "Cache-Control": "public, max-age=300",
+        "Cache-Control": "no-store",
         "Content-Type": response.headers.get("Content-Type") || "image/png",
       },
     });

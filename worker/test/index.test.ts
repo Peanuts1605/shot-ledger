@@ -208,6 +208,7 @@ describe("Shot Ledger edge", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("image/png");
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect([...new Uint8Array(await response.arrayBuffer())]).toEqual([1, 2, 3]);
   });
 
