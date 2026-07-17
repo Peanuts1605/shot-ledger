@@ -2,16 +2,14 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
-import sys
 from pathlib import Path
 
 from genblaze_core import KeyStrategy, Modality, ObjectStorageSink, Pipeline, StepStatus
 from genblaze_gmicloud import GMICloudImageProvider
 from genblaze_s3 import S3StorageBackend
 
-from .b2_store import DecisionStore, GenerationStore
-from .decision import Take, build_decision_packet
+from .b2_store import GenerationStore
+from .decision import Take
 from .generation_state import (
     GenerationSlot,
     GenerationState,
@@ -159,7 +157,21 @@ def _write_local_state(state: GenerationState) -> Path:
     return path
 
 
-def _finalize(state: GenerationState, backend: S3StorageBackend) -> None:
+def _write_review_assets(state: GenerationState, backend: S3StorageBackend) -> list[Path]:
+    review_dir = PROOF_DIR / "review"
+    review_dir.mkdir(parents=True, exist_ok=True)
+    paths = []
+    for take in state.successful_takes:
+        key = backend.key_from_url(take.asset_uri)
+        if key is None:
+            raise RuntimeError(f"{take.take_id} asset is outside the configured B2 bucket")
+        path = review_dir / f"{take.take_id}.png"
+        path.write_bytes(backend.get(key))
+        paths.append(path)
+    return paths
+
+
+def _finish_generation(state: GenerationState, backend: S3StorageBackend) -> None:
     state_path = _write_local_state(state)
     if not state.complete:
         failed = ", ".join(state.pending_take_ids)
@@ -167,40 +179,14 @@ def _finalize(state: GenerationState, backend: S3StorageBackend) -> None:
             f"real proof remains partial ({failed}); preserved state: {state_path}; "
             "retry with python -m shot_ledger.retry_real_proof"
         )
-
-    packet = build_decision_packet(
-        scene_id=state.scene_id,
-        brief=state.brief,
-        locked_variables=state.locked_variables,
-        takes=state.successful_takes,
-        keeper_take_id="take-a",
-        selection_reason=(
-            "The left window light keeps the lid readable and separates the handle "
-            "without changing the calm tabletop mood."
-        ),
-    )
-    decision_key = DecisionStore(backend).save(packet)
-    receipt = {
-        "decision_key": decision_key,
-        "generation_state_hash": state.state_hash,
-        "packet_hash": packet.packet_hash,
-        "scene_id": packet.scene_id,
-        "take_attempts": {slot.take_id: slot.attempts for slot in state.slots},
-        "take_manifest_hashes": {take.take_id: take.manifest_hash for take in packet.takes},
-        "decision_stored": True,
-    }
-    receipt_path = PROOF_DIR / "real-proof-receipt.json"
-    receipt_path.write_text(
-        json.dumps(receipt, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    print(f"B2 decision key: {decision_key}")
-    print(f"Packet hash: {packet.packet_hash}")
-    print(f"Receipt: {receipt_path}")
-    subprocess.run(
-        [sys.executable, "-m", "shot_ledger.verify_b2"],
-        check=True,
-        env={**os.environ, "SHOT_LEDGER_SCENE_ID": packet.scene_id},
+    review_paths = _write_review_assets(state, backend)
+    print(f"Generation state: {state_path}")
+    for path in review_paths:
+        print(f"Review take: {path}")
+    print("No keeper has been selected yet.")
+    print(
+        "After reviewing all three images, seal one with: "
+        "python -m shot_ledger.finalize_real_proof --keeper <take-id> --reason <visible-reason>"
     )
 
 
@@ -212,7 +198,7 @@ def run(*, resume: bool = False) -> None:
     state_store.save(state)
     state = _generate_pending(state, backend)
     state_store.save(state)
-    _finalize(state, backend)
+    _finish_generation(state, backend)
 
 
 if __name__ == "__main__":

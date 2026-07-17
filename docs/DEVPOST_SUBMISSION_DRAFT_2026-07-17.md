@@ -24,6 +24,8 @@ Shot Ledger treats approval as a production artifact rather than a comment.
 4. Records one keeper and a concrete human reason.
 5. Packages the keeper, rejected siblings, prompt, parameters, provider/model, Genblaze manifests, media hashes, and human decision into one B2-backed receipt.
 
+The real proof does not preselect a winning take. Generation stops after the three B2-backed images are available for visual review; only then can a reviewer name the keeper and seal the reason it won.
+
 The result answers two questions together: **How was this made? Why did we choose it?**
 
 ## How We Built It

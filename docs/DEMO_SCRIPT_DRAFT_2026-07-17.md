@@ -24,6 +24,8 @@ Select a different take, write a visible reason, and show the receipt state chan
 
 "Resealing creates a new decision hash. The keeper, rejected siblings, exact prompt, parameters, provider, model, and human reason stay together."
 
+The real proof never preselects a winner. Generation stops with three B2-backed review images; the keeper and concrete reason are supplied only after visual review.
+
 Reseal and show the updated selected-take receipt.
 
 ## 1:00-1:15 - B2 And Genblaze Proof

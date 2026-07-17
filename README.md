@@ -70,9 +70,19 @@ and run:
 ```
 
 The command generates three controlled takes through Genblaze, stores every
-asset and manifest in B2, writes the decision packet, then launches a separate
-verification process. That process reloads the packet, all three private image
-objects, and all three Genblaze manifests from B2 before it writes
+asset and manifest in B2, and downloads the exact B2-backed images to
+`proof/real/review/`. It deliberately does not choose a keeper. Review all three
+images, then seal the visible human decision:
+
+```bash
+.venv/bin/python -m shot_ledger.finalize_real_proof \
+  --keeper take-b \
+  --reason "The overhead take keeps the rim and handle equally readable."
+```
+
+Finalization stores the decision packet, then launches a separate verification
+process. That process reloads the packet, all three private image objects, and
+all three Genblaze manifests from B2 before it writes
 `proof/real/b2-reload-verification.json`.
 
 If one provider call fails, Shot Ledger saves the successful siblings and a
