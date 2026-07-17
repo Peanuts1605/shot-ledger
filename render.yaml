@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: shot-ledger
+    runtime: python
+    plan: free
+    buildCommand: pip install -e '.[b2]'
+    startCommand: python -m shot_ledger.server
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: SHOT_LEDGER_HOST
+        value: 0.0.0.0
+      - key: SHOT_LEDGER_STORAGE_MODE
+        value: b2
+      - key: SHOT_LEDGER_SCENE_ID
+        value: public-safe-travel-mug-001
+      - key: SHOT_LEDGER_ALLOW_B2_WRITES
+        value: "false"
+      - key: B2_KEY_ID
+        sync: false
+      - key: B2_APP_KEY
+        sync: false
+      - key: B2_BUCKET
+        sync: false
+      - key: B2_REGION
+        sync: false

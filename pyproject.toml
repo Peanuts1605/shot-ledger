@@ -17,6 +17,9 @@ dev = [
   "pytest>=8",
   "ruff>=0.12",
 ]
+b2 = [
+  "genblaze-s3>=0.3.5,<0.4",
+]
 real = [
   "genblaze-gmicloud>=0.3.1,<0.4",
   "genblaze-s3>=0.3.5,<0.4",

@@ -137,6 +137,15 @@ class ShotLedgerHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         path = urlparse(self.path).path
+        if path == "/healthz":
+            self._send_json(
+                {
+                    "status": "ok",
+                    "storage_mode": self.repository.storage_mode,
+                    "write_enabled": self.write_enabled,
+                }
+            )
+            return
         if path == "/api/scene":
             try:
                 self._send_json(
@@ -215,7 +224,7 @@ class ShotLedgerHandler(BaseHTTPRequestHandler):
 
 def main() -> None:
     host = os.environ.get("SHOT_LEDGER_HOST", "127.0.0.1")
-    port = int(os.environ.get("SHOT_LEDGER_PORT", "4173"))
+    port = int(os.environ.get("SHOT_LEDGER_PORT", os.environ.get("PORT", "4173")))
     mode = os.environ.get("SHOT_LEDGER_STORAGE_MODE", "local").strip().lower()
     if mode == "local" and not PACKET_PATH.exists():
         raise RuntimeError("run python -m shot_ledger.proof_local before starting the app")

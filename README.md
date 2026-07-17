@@ -85,6 +85,12 @@ hashed generation-state receipt. Resume with:
 Only failed or pending takes run again; completed takes retain their original
 asset and manifest provenance.
 
+## Public Demo Deploy
+
+`render.yaml` defines the public read-only review service. It installs only the
+B2 runtime dependency, binds to Render's assigned port, and checks `/healthz`.
+The four B2 values stay in the host's secret environment and are never committed.
+
 
 ## Product Documents
 
