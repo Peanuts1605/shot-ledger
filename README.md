@@ -2,6 +2,8 @@
 
 Controlled dailies for generative media.
 
+[![CI](https://github.com/Peanuts1605/shot-ledger/actions/workflows/ci.yml/badge.svg)](https://github.com/Peanuts1605/shot-ledger/actions/workflows/ci.yml)
+
 Shot Ledger gives every approved AI shot a portable handoff that answers two
 questions together: **How was this made? Why did we choose it?**
 
