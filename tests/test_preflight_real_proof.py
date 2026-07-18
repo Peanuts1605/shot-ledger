@@ -1,6 +1,9 @@
 import sys
 from types import SimpleNamespace
 
+import pytest
+from genblaze_core import StorageError
+
 from shot_ledger import preflight_real_proof
 
 
@@ -85,3 +88,23 @@ def test_b2_preflight_reports_configured_bucket_and_closes(monkeypatch):
         "status": "verified",
     }
     assert closed == [True]
+
+
+def test_b2_preflight_names_required_s3_key_capability(monkeypatch):
+    class FakeStorageBackend:
+        @staticmethod
+        def for_backblaze(*, preflight):
+            assert preflight is True
+            raise StorageError("HeadBucket returned AccessDenied")
+
+    monkeypatch.setitem(
+        sys.modules,
+        "genblaze_s3",
+        SimpleNamespace(S3StorageBackend=FakeStorageBackend),
+    )
+
+    with pytest.raises(RuntimeError, match="List all bucket names") as captured:
+        preflight_real_proof.verify_b2()
+
+    assert isinstance(captured.value.__cause__, StorageError)
+    assert "shot-ledger/" in str(captured.value)

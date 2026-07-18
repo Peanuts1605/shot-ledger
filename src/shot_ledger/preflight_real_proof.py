@@ -23,9 +23,17 @@ def verify_provider() -> dict[str, str]:
 
 
 def verify_b2() -> dict[str, str]:
+    from genblaze_core import StorageError
     from genblaze_s3 import S3StorageBackend
 
-    backend: Any = S3StorageBackend.for_backblaze(preflight=True)
+    try:
+        backend: Any = S3StorageBackend.for_backblaze(preflight=True)
+    except StorageError as error:
+        raise RuntimeError(
+            "Backblaze S3 preflight failed. Confirm the bucket-scoped key has "
+            "Read and Write access, 'List all bucket names' enabled for S3 "
+            "HeadBucket compatibility, and the 'shot-ledger/' file prefix."
+        ) from error
     try:
         return {
             "bucket": os.environ["B2_BUCKET"],

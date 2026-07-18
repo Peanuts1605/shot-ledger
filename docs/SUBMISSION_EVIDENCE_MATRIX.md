@@ -15,7 +15,7 @@ evidence. `PENDING` is not presented as proof.
 | Human review required before real keeper selection | VERIFIED_CODE | Finalization tests and explicit sealing command |
 | Desktop review clarity | VERIFIED_LOCAL | `proof/ui/shot-ledger-desktop.png` |
 | Mobile review clarity | VERIFIED_LOCAL | `proof/ui/shot-ledger-mobile-top.png` and decision capture |
-| Automated test suite | VERIFIED_LOCAL | 40 Python tests and 11 Worker tests pass; Ruff, typecheck, dependency check, and Worker dry-run pass |
+| Automated test suite | VERIFIED_LOCAL | 41 Python tests and 11 Worker tests pass; Ruff, typecheck, dependency check, and Worker dry-run pass |
 | Clean-checkout CI | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger/actions/runs/29663305820 |
 | Public source repository | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger |
 | Read-only synthetic preview | VERIFIED_PUBLIC | https://shot-ledger-preview.gigantic-stranger.workers.dev |

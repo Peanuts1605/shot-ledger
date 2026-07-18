@@ -100,6 +100,12 @@ confirms the configured model exists, and opens the private B2 bucket without
 uploading an object or starting paid generation. Its receipt must say
 `ready_for_spend_approval` before the three-take command runs.
 
+The B2 application key is limited to the proof bucket and the
+`shot-ledger/` file prefix. Enable **List all bucket names** when creating it:
+Backblaze requires that capability for the S3-compatible `HeadBucket` request
+used by Genblaze's read-only preflight. It exposes bucket names, not object
+contents outside the scoped proof bucket.
+
 The command generates three controlled takes through Genblaze, stores every
 asset and manifest in B2, and downloads the exact B2-backed images to
 `proof/real/review/`. It deliberately does not choose a keeper. Review all three

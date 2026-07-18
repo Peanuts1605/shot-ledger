@@ -15,6 +15,9 @@ contains no credentials.
 - Object prefix: `shot-ledger/`
 - Genblaze assets and manifests: `shot-ledger/genblaze/`
 - Proof credential: pending creation as a 90-day, bucket-only read/write key
+  with the `shot-ledger/` file prefix and **List all bucket names** enabled.
+  Backblaze requires that capability for S3-compatible `HeadBucket` checks;
+  object access remains restricted to the proof bucket and prefix.
 - Public Worker credential: deferred until proof passes; it must be a separate
   read-only key
 
