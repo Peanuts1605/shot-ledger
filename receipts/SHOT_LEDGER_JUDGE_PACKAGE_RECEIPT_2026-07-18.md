@@ -34,6 +34,7 @@ Supporting artifacts:
 - Dependency audit found zero vulnerabilities at the configured gate.
 - Cloudflare Worker dry run passed.
 - Git diff whitespace check passed.
+- Clean-checkout GitHub CI run `29665129867` passed.
 - GitHub repository returned HTTP 200.
 - Latest recorded GitHub Actions run returned HTTP 200.
 - Synthetic public preview returned HTTP 200.
