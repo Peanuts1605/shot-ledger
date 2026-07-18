@@ -105,37 +105,52 @@ def _failed_slot(slot: GenerationSlot, error_code: object, error: object) -> Gen
     )
 
 
-def _generate_pending(state: GenerationState, backend: Any) -> GenerationState:
+def _replace_slot(state: GenerationState, replacement: GenerationSlot) -> GenerationState:
+    return build_generation_state(
+        scene_id=state.scene_id,
+        brief=state.brief,
+        locked_variables=state.locked_variables,
+        changed_variable=state.changed_variable,
+        slots=[
+            replacement if slot.take_id == replacement.take_id else slot for slot in state.slots
+        ],
+    )
+
+
+def _generate_pending(
+    state: GenerationState,
+    backend: Any,
+    state_store: GenerationStore,
+) -> GenerationState:
     pending = [slot for slot in state.slots if slot.status != "succeeded"]
     if not pending:
         return state
 
     model, parameters = _provider_settings()
-    prompts = [f"{BRIEF} Lighting: {slot.changed_value}." for slot in pending]
     storage = ObjectStorageSink(backend, key_strategy=KeyStrategy.HIERARCHICAL)
-    results = (
-        Pipeline("shot-ledger-controlled-lighting")
-        .step(
-            _provider(),
-            model=model,
-            prompt="{prompt}",
-            modality=Modality.IMAGE,
-            **parameters,
-        )
-        .batch_run(
-            prompts=prompts,
-            sink=storage,
-            fail_fast=False,
-            raise_on_failure=False,
-            timeout=180,
-        )
-    )
+    provider = _provider()
 
-    replacements: dict[str, GenerationSlot] = {}
-    for slot, prompt, result in zip(pending, prompts, results, strict=True):
+    for slot in pending:
+        prompt = f"{BRIEF} Lighting: {slot.changed_value}."
+        result = (
+            Pipeline("shot-ledger-controlled-lighting")
+            .step(
+                provider,
+                model=model,
+                prompt=prompt,
+                modality=Modality.IMAGE,
+                **parameters,
+            )
+            .run(
+                sink=storage,
+                raise_on_failure=False,
+                timeout=180,
+            )
+        )
         step = result.run.steps[-1]
         if step.status != StepStatus.SUCCEEDED or not step.assets:
-            replacements[slot.take_id] = _failed_slot(slot, step.error_code, step.error)
+            state = _replace_slot(state, _failed_slot(slot, step.error_code, step.error))
+            state_store.save(state)
             continue
 
         asset = step.assets[0]
@@ -146,11 +161,15 @@ def _generate_pending(state: GenerationState, backend: Any) -> GenerationState:
             or not manifest.manifest_uri
             or not manifest.canonical_hash
         ):
-            replacements[slot.take_id] = _failed_slot(
-                slot,
-                "durable_provenance_missing",
-                "provider succeeded without a durable asset and manifest",
+            state = _replace_slot(
+                state,
+                _failed_slot(
+                    slot,
+                    "durable_provenance_missing",
+                    "provider succeeded without a durable asset and manifest",
+                ),
             )
+            state_store.save(state)
             continue
 
         take = Take(
@@ -166,21 +185,19 @@ def _generate_pending(state: GenerationState, backend: Any) -> GenerationState:
             manifest_hash=manifest.canonical_hash,
             manifest_uri=manifest.manifest_uri,
         )
-        replacements[slot.take_id] = GenerationSlot(
-            take_id=slot.take_id,
-            changed_value=slot.changed_value,
-            status="succeeded",
-            attempts=slot.attempts + 1,
-            take=take,
+        state = _replace_slot(
+            state,
+            GenerationSlot(
+                take_id=slot.take_id,
+                changed_value=slot.changed_value,
+                status="succeeded",
+                attempts=slot.attempts + 1,
+                take=take,
+            ),
         )
+        state_store.save(state)
 
-    return build_generation_state(
-        scene_id=state.scene_id,
-        brief=state.brief,
-        locked_variables=state.locked_variables,
-        changed_variable=state.changed_variable,
-        slots=[replacements.get(slot.take_id, slot) for slot in state.slots],
-    )
+    return state
 
 
 def _write_local_state(state: GenerationState) -> Path:
@@ -231,7 +248,7 @@ def run(*, resume: bool = False) -> None:
     state_store = GenerationStore(backend)
     state = state_store.load(SCENE_ID) if resume else _initial_state()
     state_store.save(state)
-    state = _generate_pending(state, backend)
+    state = _generate_pending(state, backend, state_store)
     state_store.save(state)
     _finish_generation(state, backend)
 
