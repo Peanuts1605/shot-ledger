@@ -39,5 +39,6 @@ authorization before creation. No provider charge has been made.
 
 ## Shared Proof
 
-- Drive path: pending
-- Notion pointer: pending
+- Drive path: `/TMN_NAUMIO_HQ/06_DELIVERY/SHOT-LEDGER-RULES-CI-2026-07-18/`
+- Notion pointer: https://app.notion.com/p/3a1b143d2917811fbc12e6879fe155bb
+- Mirror verification: hash-matched by `mirror_shared_proof.mjs`; reconciled receipt re-mirrored after pointer update
