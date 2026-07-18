@@ -1,8 +1,10 @@
 import { AwsClient } from "aws4fetch";
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import worker, {
   buildPublicScene,
+  computeDecisionHash,
   keyFromDurableUrl,
   receiptMatchesDecision,
 } from "../src/index";
@@ -38,18 +40,39 @@ function b2Env(): Env {
   };
 }
 
-function mockB2Objects({ packetHash = "packet-123" }: { packetHash?: string } = {}) {
-  const decision = {
-    packet_hash: "packet-123",
-    takes: ["take-a", "take-b", "take-c"].map((takeId) => ({
+async function decisionFixture(): Promise<JsonRecord> {
+  const decision: JsonRecord = {
+    brief: "Locked travel mug study",
+    created_at: "2026-07-18T12:00:00+00:00",
+    keeper_take_id: "take-a",
+    locked_variables: { frame: "4:5" },
+    scene_id: "public-safe-travel-mug-001",
+    selection_reason: "The handle remains readable.",
+    takes: ["take-a", "take-b", "take-c"].map((takeId, index) => ({
       asset_uri: `https://s3.us-east-005.backblazeb2.com/shot-ledger-test/media/${takeId}.png`,
+      asset_sha256: `${index + 1}`.repeat(64),
+      changed_value: ["left", "overhead", "side"][index],
+      changed_variable: "light_direction",
+      manifest_hash: `${index + 4}`.repeat(64),
+      manifest_uri: `https://s3.us-east-005.backblazeb2.com/shot-ledger-test/manifests/${takeId}.json`,
+      model: "proof-model",
+      parameters: { n: 1 },
+      prompt: `Travel mug / ${takeId}`,
+      provider: "proof-provider",
+      status: index === 0 ? "keeper" : "rejected",
       take_id: takeId,
     })),
   };
+  decision.packet_hash = await computeDecisionHash(decision);
+  return decision;
+}
+
+async function mockB2Objects({ packetHash }: { packetHash?: string } = {}) {
+  const decision = await decisionFixture();
   const verification = {
     decision_hash_matches: true,
     media_integrity: { status: "verified", verified: true },
-    packet_hash: packetHash,
+    packet_hash: packetHash || decision.packet_hash,
     verified: true,
   };
   const generationState = {
@@ -120,13 +143,14 @@ describe("Shot Ledger edge", () => {
     expect(await response.json()).toEqual({ complete: true, succeeded_count: 3 });
   });
 
-  it("builds a visibly B2-backed public scene", () => {
-    const result = buildPublicScene(
-      { packet_hash: "packet-123", takes: [{ take_id: "take-a" }] },
+  it("builds a visibly B2-backed public scene", async () => {
+    const decision = await decisionFixture();
+    const result = await buildPublicScene(
+      decision,
       {
         decision_hash_matches: true,
         media_integrity: { status: "verified", verified: true },
-        packet_hash: "packet-123",
+        packet_hash: decision.packet_hash,
         verified: true,
       },
     );
@@ -170,10 +194,11 @@ describe("Shot Ledger edge", () => {
     ).toThrow();
   });
 
-  it("requires the independent receipt to match the decision packet", () => {
+  it("requires the independent receipt to match the decision packet", async () => {
+    const decision = await decisionFixture();
     expect(
-      receiptMatchesDecision(
-        { packet_hash: "new" },
+      await receiptMatchesDecision(
+        decision,
         {
           decision_hash_matches: true,
           media_integrity: { verified: true },
@@ -184,8 +209,46 @@ describe("Shot Ledger edge", () => {
     ).toBe(false);
   });
 
+  it("matches the canonical hash written by the Python decision builder", async () => {
+    const decision = JSON.parse(
+      readFileSync(new URL("../public/proof/decision.json", import.meta.url), "utf8"),
+    ) as JsonRecord;
+
+    expect(await computeDecisionHash(decision)).toBe(decision.packet_hash);
+  });
+
+  it("rejects decision content changed after independent verification", async () => {
+    const decision = await decisionFixture();
+    const verification = {
+      decision_hash_matches: true,
+      media_integrity: { verified: true },
+      packet_hash: decision.packet_hash,
+      verified: true,
+    };
+
+    decision.selection_reason = "A different reason inserted after verification.";
+
+    expect(await receiptMatchesDecision(decision, verification)).toBe(false);
+  });
+
+  it("rejects a structurally invalid packet even when its digest is current", async () => {
+    const decision = await decisionFixture();
+    const takes = decision.takes as JsonRecord[];
+    takes[1].take_id = "take-a";
+    takes[1].status = "keeper";
+    decision.packet_hash = await computeDecisionHash(decision);
+    const verification = {
+      decision_hash_matches: true,
+      media_integrity: { verified: true },
+      packet_hash: decision.packet_hash,
+      verified: true,
+    };
+
+    expect(await receiptMatchesDecision(decision, verification)).toBe(false);
+  });
+
   it("serves a B2 scene only with a matching independent receipt", async () => {
-    mockB2Objects();
+    await mockB2Objects();
 
     const response = await worker.fetch(
       new Request("https://example.test/api/scene"),
@@ -199,7 +262,7 @@ describe("Shot Ledger edge", () => {
   });
 
   it("streams a verified B2 take without buffering it into JSON", async () => {
-    mockB2Objects();
+    await mockB2Objects();
 
     const response = await worker.fetch(
       new Request("https://example.test/api/assets/take-a"),
@@ -213,11 +276,24 @@ describe("Shot Ledger edge", () => {
   });
 
   it("refuses B2 media when the verification receipt is stale", async () => {
-    mockB2Objects({ packetHash: "old-packet" });
+    await mockB2Objects({ packetHash: "old-packet" });
     vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     const response = await worker.fetch(
       new Request("https://example.test/api/assets/take-a"),
+      b2Env(),
+    );
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: "proof temporarily unavailable" });
+  });
+
+  it("refuses packet export when the verification receipt is stale", async () => {
+    await mockB2Objects({ packetHash: "old-packet" });
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const response = await worker.fetch(
+      new Request("https://example.test/api/export"),
       b2Env(),
     );
 

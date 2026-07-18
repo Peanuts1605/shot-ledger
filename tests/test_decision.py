@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import copy
+import hashlib
+import json
 from dataclasses import replace
 
 import pytest
@@ -90,4 +93,25 @@ def test_stored_status_must_match_keeper():
     payload["takes"][0]["status"] = "rejected"
 
     with pytest.raises(ValueError, match="status conflicts"):
+        decision_packet_from_dict(payload)
+
+
+def test_stored_packet_revalidates_unique_take_ids_even_with_matching_hash():
+    payload = copy.deepcopy(make_packet().to_dict())
+    payload["takes"][1]["take_id"] = "a"
+    payload["takes"][1]["status"] = "keeper"
+    hash_payload = copy.deepcopy(payload)
+    hash_payload.pop("packet_hash")
+    for take in hash_payload["takes"]:
+        take.pop("status")
+    payload["packet_hash"] = hashlib.sha256(
+        json.dumps(
+            hash_payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+        ).encode("utf-8")
+    ).hexdigest()
+
+    with pytest.raises(ValueError, match="take IDs must be unique"):
         decision_packet_from_dict(payload)

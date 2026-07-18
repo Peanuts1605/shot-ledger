@@ -79,29 +79,105 @@ export function keyFromDurableUrl(uri: string, bucket: string, region: string): 
   return key;
 }
 
-export function receiptMatchesDecision(
-  decision: JsonRecord,
-  verification: JsonRecord,
-): boolean {
-  const mediaIntegrity = verification.media_integrity as JsonRecord | undefined;
-  return (
-    verification.verified === true &&
-    verification.decision_hash_matches === true &&
-    mediaIntegrity?.verified === true &&
-    typeof decision.packet_hash === "string" &&
-    decision.packet_hash === verification.packet_hash
-  );
+function canonicalValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as JsonRecord)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => [key, canonicalValue(entry)]),
+    );
+  }
+  return value;
 }
 
-export function buildPublicScene(
+function decisionHashPayload(decision: JsonRecord): JsonRecord {
+  const { packet_hash: _packetHash, ...payload } = decision;
+  if (Array.isArray(payload.takes)) {
+    payload.takes = payload.takes.map((entry) => {
+      const { status: _status, ...take } = entry as JsonRecord;
+      return take;
+    });
+  }
+  return payload;
+}
+
+function decisionStructureValid(decision: JsonRecord): boolean {
+  const takes = decision.takes;
+  if (
+    !Array.isArray(takes) ||
+    takes.length !== 3 ||
+    typeof decision.keeper_take_id !== "string" ||
+    typeof decision.selection_reason !== "string" ||
+    !decision.selection_reason.trim() ||
+    typeof decision.packet_hash !== "string" ||
+    !/^[0-9a-f]{64}$/.test(decision.packet_hash)
+  ) {
+    return false;
+  }
+  const takeIds = takes.map((entry) => (entry as JsonRecord).take_id);
+  const changedVariables = takes.map((entry) => (entry as JsonRecord).changed_variable);
+  if (
+    takeIds.some((takeId) => typeof takeId !== "string") ||
+    new Set(takeIds).size !== 3 ||
+    !takeIds.includes(decision.keeper_take_id) ||
+    new Set(changedVariables).size !== 1
+  ) {
+    return false;
+  }
+  return takes.every((entry) => {
+    const take = entry as JsonRecord;
+    const expectedStatus = take.take_id === decision.keeper_take_id ? "keeper" : "rejected";
+    return (
+      take.status === expectedStatus &&
+      typeof take.asset_sha256 === "string" &&
+      /^[0-9a-f]{64}$/.test(take.asset_sha256) &&
+      typeof take.manifest_hash === "string" &&
+      /^[0-9a-f]{64}$/.test(take.manifest_hash)
+    );
+  });
+}
+
+export async function computeDecisionHash(decision: JsonRecord): Promise<string> {
+  const canonical = JSON.stringify(canonicalValue(decisionHashPayload(decision))).replace(
+    /[\u007f-\uffff]/g,
+    (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  );
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export async function receiptMatchesDecision(
   decision: JsonRecord,
   verification: JsonRecord,
-): JsonRecord {
+): Promise<boolean> {
+  const mediaIntegrity = verification.media_integrity as JsonRecord | undefined;
+  try {
+    return (
+      decisionStructureValid(decision) &&
+      verification.verified === true &&
+      verification.decision_hash_matches === true &&
+      mediaIntegrity?.verified === true &&
+      typeof decision.packet_hash === "string" &&
+      decision.packet_hash === verification.packet_hash &&
+      decision.packet_hash === await computeDecisionHash(decision)
+    );
+  } catch {
+    return false;
+  }
+}
+
+export async function buildPublicScene(
+  decision: JsonRecord,
+  verification: JsonRecord,
+): Promise<JsonRecord> {
   const takes = (decision.takes as JsonRecord[]).map((take) => ({
     ...take,
     preview_url: `/api/assets/${take.take_id as string}`,
   }));
-  const proofVerified = receiptMatchesDecision(decision, verification);
+  const proofVerified = await receiptMatchesDecision(decision, verification);
   return {
     ...decision,
     takes,
@@ -138,10 +214,17 @@ async function b2Api(env: Env, path: string): Promise<Response> {
       loadB2Json(env, sceneKey(env, "decision.json")),
       loadB2Json(env, sceneKey(env, "verification.json")),
     ]);
-    return jsonResponse(buildPublicScene(decision, verification));
+    return jsonResponse(await buildPublicScene(decision, verification));
   }
   if (path === "/api/export") {
-    return jsonResponse(await loadB2Json(env, sceneKey(env, "decision.json")));
+    const [decision, verification] = await Promise.all([
+      loadB2Json(env, sceneKey(env, "decision.json")),
+      loadB2Json(env, sceneKey(env, "verification.json")),
+    ]);
+    if (!(await receiptMatchesDecision(decision, verification))) {
+      throw new Error("B2 decision and verification receipt do not match");
+    }
+    return jsonResponse(decision);
   }
   if (path === "/api/run-state") {
     const state = await loadB2Json(env, sceneKey(env, "generation-state.json"));
@@ -164,7 +247,7 @@ async function b2Api(env: Env, path: string): Promise<Response> {
       loadB2Json(env, sceneKey(env, "decision.json")),
       loadB2Json(env, sceneKey(env, "verification.json")),
     ]);
-    if (!receiptMatchesDecision(decision, verification)) {
+    if (!(await receiptMatchesDecision(decision, verification))) {
       throw new Error("B2 decision and verification receipt do not match");
     }
     const take = (decision.takes as JsonRecord[]).find(

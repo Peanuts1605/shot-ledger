@@ -59,6 +59,8 @@ portable evidence handoff. Both are required by the working product path.
 - A partial run cannot be sealed.
 - Retry touches only failed or pending takes.
 - Decision integrity and media/provenance integrity are reported separately.
+- The public Worker recomputes the canonical decision hash before serving B2
+  media or packet exports; it does not trust a stored verification flag alone.
 - The public edge serves B2 media only when the decision packet and independent verification receipt match.
 - The public deployment is read-only by default.
 - Credentials and signed URLs never enter the decision packet.

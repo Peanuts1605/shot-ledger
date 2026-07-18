@@ -20,7 +20,7 @@ complete handoff durable and independently reloadable.
 | Criterion | Judge-visible answer | Required proof |
 |---|---|---|
 | Real-World Utility | A creative lead can hand another person both the recipe and rationale for an approved shot. | Three-take review, keeper reason, downloaded packet |
-| Production Readiness | Partial provider runs preserve completed takes; retry generates only missing work; public review is read-only. | Recovery state, selective retry test, public mutation rejection |
+| Production Readiness | Partial provider runs preserve completed takes; retry generates only missing work; public review is read-only and revalidates the decision before serving evidence. | Recovery state, selective retry test, public mutation rejection, stale-receipt rejection |
 | B2 Storage and Data Orchestration | B2 is the system of record for images, manifests, retry state, decision packet, and reload receipt. | Private bucket objects, fresh-process seven-object reload, public signed retrieval |
 | Use of Genblaze | Genblaze runs each controlled take and writes canonical provenance manifests through the storage sink. | Real run receipt, three manifests, provider/model shown in UI |
 

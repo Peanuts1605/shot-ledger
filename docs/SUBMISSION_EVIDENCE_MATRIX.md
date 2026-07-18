@@ -9,13 +9,13 @@ evidence. `PENDING` is not presented as proof.
 |---|---|---|
 | Controlled three-take comparison | VERIFIED_LOCAL | `proof/local/decision.json` and three local takes |
 | Keeper plus concrete human reason | VERIFIED_LOCAL | Interactive review surface and decision packet |
-| Decision tamper detection | VERIFIED_LOCAL | Automated decision and review tests |
+| Decision tamper detection | VERIFIED_LOCAL | Python reload and public Worker independently recompute the packet hash; stale exports are refused |
 | Image bytes and manifest verification | VERIFIED_LOCAL | Automated verification tests |
 | Partial-run recovery and selective retry | VERIFIED_LOCAL | Recovery UI, state tests, desktop/mobile captures |
 | Human review required before real keeper selection | VERIFIED_CODE | Finalization tests and explicit sealing command |
 | Desktop review clarity | VERIFIED_LOCAL | `proof/ui/shot-ledger-desktop.png` |
 | Mobile review clarity | VERIFIED_LOCAL | `proof/ui/shot-ledger-mobile-top.png` and decision capture |
-| Automated test suite | VERIFIED_LOCAL | 41 Python tests and 11 Worker tests pass; Ruff, typecheck, dependency check, and Worker dry-run pass |
+| Automated test suite | VERIFIED_LOCAL | 42 Python tests and 15 Worker tests pass; Ruff, typecheck, dependency check, and Worker dry-run pass |
 | Clean-checkout CI | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger/actions/runs/29665333533 |
 | Public source repository | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger |
 | Read-only synthetic preview | VERIFIED_PUBLIC | https://shot-ledger-preview.gigantic-stranger.workers.dev |

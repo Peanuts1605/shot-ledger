@@ -97,6 +97,8 @@ The public B2 demo is read-only by default, so anonymous visitors cannot overwri
 - Byte-level image verification plus Genblaze manifest and recipe verification.
 - Selective retry that preserves completed, paid takes.
 - A fresh-process B2 reload verifier.
+- A public edge that recomputes the decision hash before serving media or packet
+  exports, even when a stored verification receipt says the packet passed.
 - A read-only public review surface.
 - A public-safe synthetic fallback that is visibly labeled and never
   impersonates provider-backed evidence.

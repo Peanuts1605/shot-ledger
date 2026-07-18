@@ -136,7 +136,7 @@ def take_from_dict(take: dict[str, Any]) -> Take:
 
 
 def decision_packet_from_dict(payload: dict[str, Any]) -> DecisionPacket:
-    takes = tuple(take_from_dict(take) for take in payload["takes"])
+    takes = [take_from_dict(take) for take in payload["takes"]]
     if len(takes) != 3:
         raise ValueError("stored packet must contain exactly three takes")
 
@@ -147,17 +147,16 @@ def decision_packet_from_dict(payload: dict[str, Any]) -> DecisionPacket:
         if take_payload.get("status") != expected_status:
             raise ValueError("stored take status conflicts with keeper selection")
 
-    packet = DecisionPacket(
+    packet = build_decision_packet(
         scene_id=payload["scene_id"],
         brief=payload["brief"],
         locked_variables=dict(payload["locked_variables"]),
-        takes=(takes[0], takes[1], takes[2]),
+        takes=takes,
         keeper_take_id=payload["keeper_take_id"],
         selection_reason=payload["selection_reason"],
         created_at=payload["created_at"],
-        packet_hash=payload["packet_hash"],
     )
-    if not verify_packet(packet):
+    if packet.packet_hash != payload["packet_hash"] or not verify_packet(packet):
         raise ValueError("stored decision packet failed hash verification")
     return packet
 
