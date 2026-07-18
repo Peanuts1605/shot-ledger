@@ -34,7 +34,8 @@ Supporting artifacts:
 - Dependency audit found zero vulnerabilities at the configured gate.
 - Cloudflare Worker dry run passed.
 - Git diff whitespace check passed.
-- Clean-checkout GitHub CI run `29665129867` passed.
+- Clean-checkout GitHub CI run `29665333533` passed with current GitHub action
+  runtimes and no deprecation annotation.
 - GitHub repository returned HTTP 200.
 - Latest recorded GitHub Actions run returned HTTP 200.
 - Synthetic public preview returned HTTP 200.
@@ -66,7 +67,8 @@ Shot Ledger contest goal.
 
 ## Shared Proof
 
-- Git commit: PENDING_COMMIT
-- Drive path: PENDING_MIRROR
-- Notion URL: PENDING_POINTER
-- Reconciled receipt hash: PENDING_RECONCILIATION
+- Git commit: `c974ecbf0efd42ab3378c53b60e57e7e766d6ad0`
+- Drive path: `/TMN_NAUMIO_HQ/06_DELIVERY/SHOT-LEDGER-JUDGE-PACKAGE-2026-07-18/`
+- Notion URL: https://app.notion.com/p/3a1b143d2917818cb465cc00eb39af2a
+- Hash verification: recorded in the delivery folder's latest
+  `MIRROR_MANIFEST.json`
