@@ -151,6 +151,7 @@ remains a portable Python-host fallback.
 - `docs/SHOT_LEDGER_ONE_DAY_PROOF_CONTRACT_2026-07-17.md`
 - `docs/ARCHITECTURE.md`
 - `docs/SUBMISSION_EVIDENCE_MATRIX.md`
+- `docs/JUDGE_FIRST_SUBMISSION_PACKET_2026-07-18.md`
 
 ## Contest
 

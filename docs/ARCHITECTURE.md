@@ -5,23 +5,23 @@ can quietly impersonate another.
 
 ```mermaid
 flowchart TD
-    A["Locked brief + one changed variable"] --> B["Genblaze pipeline"]
+    A["Locked brief + one changed variable"] --> B["Genblaze orchestration"]
     B --> C1["Take A image + manifest"]
     B --> C2["Take B image + manifest"]
     B --> C3["Take C image + manifest"]
-    C1 --> D["Backblaze B2"]
+    C1 --> D["Backblaze B2 system of record"]
     C2 --> D
     C3 --> D
     B --> E["Hashed generation state"]
     E --> D
-    D --> F["Three-image visual review"]
+    D --> F["Three-take visual review"]
     F --> G["Explicit keeper + concrete reason"]
     G --> H["Tamper-evident decision packet"]
     H --> D
     D --> I["Fresh-process reload verifier"]
     I --> J["Decision hash result"]
     I --> K["Media + manifest result"]
-    D --> L["Cloudflare Worker: read-only public review"]
+    D --> L["Cloudflare Worker: read-only public evidence"]
 ```
 
 ## Durable Objects
@@ -35,8 +35,23 @@ flowchart TD
 | Reload receipt | Independent verification of decision, media, and manifests from B2 |
 
 Cloudflare hosts only the review surface and signs read-only B2 requests at the
-edge. It does not replace B2 as the durable store or Genblaze as the generation
-and provenance layer.
+edge. It does not replace B2 as the durable system of record or Genblaze as the
+generation and provenance layer.
+
+## Sponsor-Critical Path
+
+1. **Genblaze orchestration:** runs the three controlled provider calls and
+   creates canonical provenance manifests.
+2. **Backblaze B2 durability:** stores media, manifests, retry state, the sealed
+   human decision, and the independent reload receipt.
+3. **Shot Ledger decision layer:** joins machine recipe to human judgment without
+   allowing generation to choose its own winner.
+4. **Read-only edge:** exposes the verified packet to judges without exposing
+   credentials or allowing public mutation.
+
+Removing Genblaze loses the consistent orchestration and provenance boundary.
+Removing B2 loses partial-run durability, fresh-process reconstruction, and the
+portable evidence handoff. Both are required by the working product path.
 
 ## Trust Rules
 
