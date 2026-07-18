@@ -1,5 +1,7 @@
 import pytest
+from genblaze_s3 import S3StorageBackend
 
+from shot_ledger import real_proof
 from shot_ledger.real_proof import _provider_name, _provider_settings, _required_env
 
 
@@ -59,3 +61,21 @@ def test_unknown_provider_fails_before_generation(monkeypatch):
 
     with pytest.raises(RuntimeError, match="unsupported SHOT_LEDGER_PROVIDER"):
         _provider_name()
+
+
+def test_genblaze_storage_stays_inside_shot_ledger_prefix(monkeypatch):
+    options = {}
+    backend = object()
+
+    monkeypatch.setattr(S3StorageBackend, "for_backblaze", lambda: backend)
+
+    def fake_sink(received_backend, **kwargs):
+        assert received_backend is backend
+        options.update(kwargs)
+        return object()
+
+    monkeypatch.setattr(real_proof, "ObjectStorageSink", fake_sink)
+
+    real_proof._generation_storage_sink()
+
+    assert options["prefix"] == "shot-ledger/genblaze"

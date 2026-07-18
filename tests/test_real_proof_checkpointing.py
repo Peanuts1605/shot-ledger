@@ -53,8 +53,15 @@ def _result(take_number):
 def test_real_generation_checkpoints_each_paid_take(monkeypatch):
     FakePipeline.results = [_result(1), _result(2), _result(3)]
     store = FakeStateStore()
+    sinks = []
+
+    def fake_sink():
+        sink = object()
+        sinks.append(sink)
+        return sink
+
     monkeypatch.setattr(real_proof, "Pipeline", FakePipeline)
-    monkeypatch.setattr(real_proof, "ObjectStorageSink", lambda *args, **kwargs: object())
+    monkeypatch.setattr(real_proof, "_generation_storage_sink", fake_sink)
     monkeypatch.setattr(real_proof, "_provider", lambda: object())
     monkeypatch.setattr(
         real_proof,
@@ -62,9 +69,11 @@ def test_real_generation_checkpoints_each_paid_take(monkeypatch):
         lambda: ("test-model", {"size": "1024x1280"}),
     )
 
-    state = real_proof._generate_pending(real_proof._initial_state(), object(), store)
+    state = real_proof._generate_pending(real_proof._initial_state(), store)
 
     assert state.complete is True
+    assert len(sinks) == 3
+    assert len({id(sink) for sink in sinks}) == 3
     assert len(store.saved) == 3
     assert [
         sum(slot["status"] == "succeeded" for slot in checkpoint["slots"])
@@ -75,7 +84,7 @@ def test_real_generation_checkpoints_each_paid_take(monkeypatch):
     retry_store = FakeStateStore()
     FakePipeline.results = [_result(2), _result(3)]
 
-    retried = real_proof._generate_pending(resumed, object(), retry_store)
+    retried = real_proof._generate_pending(resumed, retry_store)
 
     assert retried.complete is True
     assert len(retry_store.saved) == 2

@@ -26,6 +26,7 @@ LOCKED_VARIABLES = {
 }
 PROOF_DIR = Path(__file__).resolve().parents[2] / "proof" / "real"
 SUPPORTED_PROVIDERS = {"gmi", "openai"}
+GENBLAZE_STORAGE_PREFIX = "shot-ledger/genblaze"
 
 
 def _provider_name() -> str:
@@ -117,9 +118,18 @@ def _replace_slot(state: GenerationState, replacement: GenerationSlot) -> Genera
     )
 
 
+def _generation_storage_sink() -> ObjectStorageSink:
+    from genblaze_s3 import S3StorageBackend
+
+    return ObjectStorageSink(
+        S3StorageBackend.for_backblaze(),
+        prefix=GENBLAZE_STORAGE_PREFIX,
+        key_strategy=KeyStrategy.HIERARCHICAL,
+    )
+
+
 def _generate_pending(
     state: GenerationState,
-    backend: Any,
     state_store: GenerationStore,
 ) -> GenerationState:
     pending = [slot for slot in state.slots if slot.status != "succeeded"]
@@ -127,10 +137,12 @@ def _generate_pending(
         return state
 
     model, parameters = _provider_settings()
-    storage = ObjectStorageSink(backend, key_strategy=KeyStrategy.HIERARCHICAL)
     provider = _provider()
 
     for slot in pending:
+        # Pipeline.run owns and closes run-scoped sinks. A fresh sink keeps one
+        # paid take from closing the B2 client needed by its siblings.
+        storage = _generation_storage_sink()
         prompt = f"{BRIEF} Lighting: {slot.changed_value}."
         result = (
             Pipeline("shot-ledger-controlled-lighting")
@@ -245,12 +257,15 @@ def run(*, resume: bool = False) -> None:
     from genblaze_s3 import S3StorageBackend
 
     backend = S3StorageBackend.for_backblaze()
-    state_store = GenerationStore(backend)
-    state = state_store.load(SCENE_ID) if resume else _initial_state()
-    state_store.save(state)
-    state = _generate_pending(state, backend, state_store)
-    state_store.save(state)
-    _finish_generation(state, backend)
+    try:
+        state_store = GenerationStore(backend)
+        state = state_store.load(SCENE_ID) if resume else _initial_state()
+        state_store.save(state)
+        state = _generate_pending(state, state_store)
+        state_store.save(state)
+        _finish_generation(state, backend)
+    finally:
+        backend.close()
 
 
 if __name__ == "__main__":
