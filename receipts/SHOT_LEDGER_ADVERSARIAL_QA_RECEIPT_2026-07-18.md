@@ -41,7 +41,8 @@ contest goal.
 
 ## Shared Proof
 
-- Git commit: PENDING_COMMIT
-- Drive path: PENDING_MIRROR
-- Notion URL: PENDING_POINTER
-- Hash verification: PENDING_RECONCILIATION
+- Git commit: `20748c2377a15a03fafbe28c61f6c577b8bd3159`
+- Drive path: `/TMN_NAUMIO_HQ/06_DELIVERY/SHOT-LEDGER-ADVERSARIAL-QA-2026-07-18/`
+- Notion URL: https://app.notion.com/p/3a1b143d291781899a7ddab4412336a1
+- Hash verification: recorded in the delivery folder's latest
+  `MIRROR_MANIFEST.json`
