@@ -40,24 +40,27 @@ approval after the read-only preflight passes.
 ## Execution Order
 
 1. Create and vault the bucket-only proof credential.
-2. Load B2 and OpenAI credentials into the process environment without writing
-   an `.env` file.
+2. Store the B2 and OpenAI credentials in 1Password. Create
+   `~/.config/shot-ledger/proof.env` from
+   `ops/shot-ledger.op.env.example`, using only `op://` secret references, and
+   set its file mode to `600`. Literal credentials never enter the repo or the
+   reference file.
 3. Run the read-only preflight:
 
    ```bash
-   .venv/bin/python -m shot_ledger.preflight_real_proof
+   scripts/proof preflight
    ```
 
 4. Require the receipt state `ready_for_spend_approval`.
 5. After explicit approval for a maximum $0.20 provider charge, run:
 
    ```bash
-   .venv/bin/python -m shot_ledger.real_proof
+   scripts/proof generate
    ```
 
 6. Review all three B2-backed images in `proof/real/review/` and choose the
    keeper using a visible, image-specific reason.
-7. Seal the decision with `shot_ledger.finalize_real_proof`.
+7. Seal the decision with `scripts/proof finalize`.
 8. Verify that the separate process reloads the decision, three assets, and
    three Genblaze manifests from B2.
 9. Run the verifier and the full local quality gates again.

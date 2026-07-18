@@ -81,13 +81,13 @@ interactive without that flag.
 ## Real Genblaze to B2 Proof
 
 The real proof reads credentials only from environment variables. Install the
-optional provider and storage packages, configure the names in `.env.example`,
-and run:
+optional provider and storage packages, create the external 1Password reference
+file from `ops/shot-ledger.op.env.example`, and run:
 
 ```bash
 .venv/bin/pip install -e '.[dev,real]'
-.venv/bin/python -m shot_ledger.preflight_real_proof
-.venv/bin/python -m shot_ledger.real_proof
+scripts/proof preflight
+scripts/proof generate
 ```
 
 `SHOT_LEDGER_PROVIDER=openai` uses Genblaze's official OpenAI image adapter and
@@ -112,7 +112,7 @@ asset and manifest in B2, and downloads the exact B2-backed images to
 images, then seal the visible human decision:
 
 ```bash
-.venv/bin/python -m shot_ledger.finalize_real_proof \
+scripts/proof finalize \
   --keeper take-b \
   --reason "The overhead take keeps the rim and handle equally readable."
 ```
@@ -126,7 +126,7 @@ If one provider call fails, Shot Ledger saves the successful siblings and a
 hashed generation-state receipt. Resume with:
 
 ```bash
-.venv/bin/python -m shot_ledger.retry_real_proof
+scripts/proof retry
 ```
 
 Only failed or pending takes run again; completed takes retain their original

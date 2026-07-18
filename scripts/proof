@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ENV_FILE="${SHOT_LEDGER_OP_ENV_FILE:-$HOME/.config/shot-ledger/proof.env}"
+PYTHON="${SHOT_LEDGER_PYTHON:-$ROOT_DIR/.venv/bin/python}"
+
+usage() {
+  cat <<'EOF'
+Usage: scripts/proof <command> [arguments]
+
+Commands:
+  preflight               Verify provider access and the scoped B2 bucket
+  generate                Generate and checkpoint the three real takes
+  retry                   Resume a checkpointed real proof
+  finalize <args...>      Seal the human keeper decision
+  verify <args...>        Reload and verify the sealed packet from B2
+
+Environment:
+  SHOT_LEDGER_OP_ENV_FILE  1Password reference file
+                           (default: ~/.config/shot-ledger/proof.env)
+  SHOT_LEDGER_PYTHON       Python executable
+                           (default: .venv/bin/python)
+EOF
+}
+
+case "${1:-}" in
+  preflight)
+    module="shot_ledger.preflight_real_proof"
+    ;;
+  generate)
+    module="shot_ledger.real_proof"
+    ;;
+  retry)
+    module="shot_ledger.retry_real_proof"
+    ;;
+  finalize)
+    module="shot_ledger.finalize_real_proof"
+    ;;
+  verify)
+    module="shot_ledger.verify_b2"
+    ;;
+  -h|--help|help|"")
+    usage
+    exit 0
+    ;;
+  *)
+    echo "Unknown command: $1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+shift
+
+if ! command -v op >/dev/null 2>&1; then
+  echo "1Password CLI (op) is required." >&2
+  exit 1
+fi
+
+if [[ ! -r "$ENV_FILE" ]]; then
+  echo "Missing 1Password reference file: $ENV_FILE" >&2
+  echo "Start from ops/shot-ledger.op.env.example and keep the real file outside the repo." >&2
+  exit 1
+fi
+
+for secret_name in B2_KEY_ID B2_APP_KEY OPENAI_API_KEY; do
+  if ! grep -Eq "^${secret_name}=op://" "$ENV_FILE"; then
+    echo "$secret_name must be an op:// reference, never a literal secret." >&2
+    exit 1
+  fi
+done
+
+if [[ ! -x "$PYTHON" ]]; then
+  echo "Python executable is unavailable: $PYTHON" >&2
+  exit 1
+fi
+
+cd "$ROOT_DIR"
+exec op run --env-file "$ENV_FILE" -- "$PYTHON" -m "$module" "$@"
