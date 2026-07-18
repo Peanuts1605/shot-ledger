@@ -87,6 +87,11 @@ and run:
 .venv/bin/python -m shot_ledger.real_proof
 ```
 
+`SHOT_LEDGER_PROVIDER=openai` uses Genblaze's official OpenAI image adapter and
+`gpt-image-2` by default. `SHOT_LEDGER_PROVIDER=gmi` keeps the GMI Cloud route
+available. Only the selected provider credential is required; both routes use
+the same Genblaze pipeline, provenance manifest, retry state, and B2 sink.
+
 The command generates three controlled takes through Genblaze, stores every
 asset and manifest in B2, and downloads the exact B2-backed images to
 `proof/real/review/`. It deliberately does not choose a keeper. Review all three

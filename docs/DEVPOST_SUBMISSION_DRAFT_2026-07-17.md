@@ -32,7 +32,7 @@ The result answers two questions together: **How was this made? Why did we choos
 
 - Python powers the generation, storage, verification, and review service.
 - Genblaze runs the controlled image pipeline and emits provenance manifests.
-- GMI Cloud Seedream 5.0 Lite is configured for the contest proof.
+- Genblaze's OpenAI adapter and GPT Image 2 are selected for the contest proof; the GMI Cloud route remains supported but is not required.
 - Backblaze B2 stores generated images, Genblaze manifests, partial-run state, and the final decision packet.
 - A separate verification process reloads all seven proof objects from B2: one decision packet, three images, and three manifests.
 - The review UI distinguishes the decision hash from media/provenance verification and makes local synthetic evidence visibly different from real B2 evidence.
@@ -80,4 +80,4 @@ Provenance becomes useful only when it travels with a human decision. A perfect 
 
 ## Technologies
 
-Python, Genblaze, Backblaze B2, GMI Cloud, Seedream 5.0 Lite, Cloudflare Workers, TypeScript, HTML, CSS, JavaScript
+Python, Genblaze, Backblaze B2, OpenAI GPT Image 2, Cloudflare Workers, TypeScript, HTML, CSS, JavaScript

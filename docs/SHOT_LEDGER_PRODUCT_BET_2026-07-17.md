@@ -82,10 +82,11 @@ User:
 
 - Available initial stake: one focused build day.
 - Paid generation stake before proof: zero.
-- First real generation stake after local proof: the smallest available free or
-  already-funded provider run.
+- First real generation stake after local proof: three medium-quality images
+  through a supported Genblaze provider, after explicit spend approval.
 - Probability of a working local decision packet: 90%.
-- Probability of a real Genblaze-to-B2 proof: 75% before account verification.
+- Provider and Backblaze accounts are verified; the remaining proof risk is
+  scoped credential setup and the live three-take run.
 - Probability of eligibility after a working hosted app: 90%.
 - Probability of 60-second judge comprehension: 85%.
 - Probability that a target user wants a second scene: 55% before playtesting.

@@ -3,10 +3,9 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 from genblaze_core import KeyStrategy, Modality, ObjectStorageSink, Pipeline, StepStatus
-from genblaze_gmicloud import GMICloudImageProvider
-from genblaze_s3 import S3StorageBackend
 
 from .b2_store import GenerationStore
 from .decision import Take
@@ -26,12 +25,56 @@ LOCKED_VARIABLES = {
     "camera": "eye-level product shot",
 }
 PROOF_DIR = Path(__file__).resolve().parents[2] / "proof" / "real"
+SUPPORTED_PROVIDERS = {"gmi", "openai"}
+
+
+def _provider_name() -> str:
+    name = os.environ.get("SHOT_LEDGER_PROVIDER", "openai").strip().lower()
+    if name not in SUPPORTED_PROVIDERS:
+        supported = ", ".join(sorted(SUPPORTED_PROVIDERS))
+        raise RuntimeError(f"unsupported SHOT_LEDGER_PROVIDER={name!r}; choose {supported}")
+    return name
+
+
+def _provider_settings() -> tuple[str, dict[str, object]]:
+    provider = _provider_name()
+    if provider == "gmi":
+        return (
+            os.environ.get("SHOT_LEDGER_GMI_MODEL", "seedream-5.0-lite"),
+            {
+                "size": "2304x2880",
+                "output_format": "png",
+                "max_images": 1,
+                "watermark": False,
+            },
+        )
+    return (
+        os.environ.get("SHOT_LEDGER_OPENAI_MODEL", "gpt-image-2"),
+        {
+            "size": "1024x1280",
+            "quality": "medium",
+            "output_format": "png",
+            "n": 1,
+        },
+    )
+
+
+def _provider() -> Any:
+    if _provider_name() == "gmi":
+        from genblaze_gmicloud import GMICloudImageProvider
+
+        return GMICloudImageProvider()
+
+    from genblaze_openai import DalleProvider
+
+    return DalleProvider()
 
 
 def _required_env() -> None:
+    provider_key = "GMI_API_KEY" if _provider_name() == "gmi" else "OPENAI_API_KEY"
     missing = [
         name
-        for name in ("B2_KEY_ID", "B2_APP_KEY", "B2_BUCKET", "GMI_API_KEY")
+        for name in ("B2_KEY_ID", "B2_APP_KEY", "B2_BUCKET", provider_key)
         if not os.environ.get(name)
     ]
     if missing:
@@ -50,15 +93,6 @@ def _initial_state() -> GenerationState:
     )
 
 
-def _generation_parameters() -> dict[str, object]:
-    return {
-        "size": "2304x2880",
-        "output_format": "png",
-        "max_images": 1,
-        "watermark": False,
-    }
-
-
 def _failed_slot(slot: GenerationSlot, error_code: object, error: object) -> GenerationSlot:
     normalized_code = str(error_code) if error_code else None
     return GenerationSlot(
@@ -71,19 +105,18 @@ def _failed_slot(slot: GenerationSlot, error_code: object, error: object) -> Gen
     )
 
 
-def _generate_pending(state: GenerationState, backend: S3StorageBackend) -> GenerationState:
+def _generate_pending(state: GenerationState, backend: Any) -> GenerationState:
     pending = [slot for slot in state.slots if slot.status != "succeeded"]
     if not pending:
         return state
 
-    model = os.environ.get("SHOT_LEDGER_GMI_MODEL", "seedream-5.0-lite")
-    parameters = _generation_parameters()
+    model, parameters = _provider_settings()
     prompts = [f"{BRIEF} Lighting: {slot.changed_value}." for slot in pending]
     storage = ObjectStorageSink(backend, key_strategy=KeyStrategy.HIERARCHICAL)
     results = (
         Pipeline("shot-ledger-controlled-lighting")
         .step(
-            GMICloudImageProvider(),
+            _provider(),
             model=model,
             prompt="{prompt}",
             modality=Modality.IMAGE,
@@ -157,7 +190,7 @@ def _write_local_state(state: GenerationState) -> Path:
     return path
 
 
-def _write_review_assets(state: GenerationState, backend: S3StorageBackend) -> list[Path]:
+def _write_review_assets(state: GenerationState, backend: Any) -> list[Path]:
     review_dir = PROOF_DIR / "review"
     review_dir.mkdir(parents=True, exist_ok=True)
     paths = []
@@ -171,7 +204,7 @@ def _write_review_assets(state: GenerationState, backend: S3StorageBackend) -> l
     return paths
 
 
-def _finish_generation(state: GenerationState, backend: S3StorageBackend) -> None:
+def _finish_generation(state: GenerationState, backend: Any) -> None:
     state_path = _write_local_state(state)
     if not state.complete:
         failed = ", ".join(state.pending_take_ids)
@@ -192,6 +225,8 @@ def _finish_generation(state: GenerationState, backend: S3StorageBackend) -> Non
 
 def run(*, resume: bool = False) -> None:
     _required_env()
+    from genblaze_s3 import S3StorageBackend
+
     backend = S3StorageBackend.for_backblaze()
     state_store = GenerationStore(backend)
     state = state_store.load(SCENE_ID) if resume else _initial_state()
