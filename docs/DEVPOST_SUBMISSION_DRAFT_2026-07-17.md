@@ -8,7 +8,7 @@ The approved AI shot, its rejected siblings, and the reason it won.
 
 ## One-Sentence Pitch
 
-Shot Ledger turns generative-media iteration into a controlled creative decision that another person can inspect, trust, and continue.
+Creative teams lose the reasoning behind an approved AI shot. Shot Ledger keeps the winner, rejected takes, exact recipe, and human reason together as a verifiable B2 receipt.
 
 ## Inspiration
 

@@ -14,13 +14,13 @@ Show the Shot Ledger scene header and proof status.
 
 Show the scene lock and three generated takes.
 
-## 0:28-0:45 - Human Decision
+## 0:28-0:48 - Human Decision
 
 "The recipe records how each take was made. The reviewer adds the missing part: which take should survive, and why."
 
-Select a different take, write a visible reason, and show the receipt state change from `Sealed` to `Draft change`.
+In the operator review surface, select a different take, write a visible reason, and show the receipt state change from `Sealed` to `Draft change`.
 
-## 0:45-1:00 - Durable Receipt
+## 0:48-1:02 - Durable Receipt
 
 "Resealing creates a new decision hash. The keeper, rejected siblings, exact prompt, parameters, provider, model, and human reason stay together."
 
@@ -28,19 +28,21 @@ The real proof never preselects a winner. Generation stops with three B2-backed 
 
 Reseal and show the updated selected-take receipt.
 
-## 1:00-1:15 - B2 And Genblaze Proof
+## 1:02-1:18 - Public B2 And Genblaze Proof
 
-"The public demo reloads the decision, all three private images, and all three Genblaze manifests from Backblaze B2. Shot Ledger verifies the decision hash, the actual media bytes, the manifest hashes, and the recorded recipe separately."
+Switch to the public URL.
 
-Show `Backblaze B2`, `Hash Matches`, `Verified`, and the provider/model fields.
+"The public view is intentionally read-only. It reloads the sealed decision, all three private images, and all three Genblaze manifests from Backblaze B2. Shot Ledger verifies the decision hash, actual media bytes, manifest hashes, and recorded recipe separately."
 
-## 1:15-1:27 - Honest Failure Recovery
+Show `Backblaze B2`, `Hash Matches`, `Verified`, the provider/model fields, and the read-only status.
+
+## 1:18-1:28 - Honest Failure Recovery
 
 "If one provider call fails, completed siblings stay saved. The recovery view names the failed take, and retry runs only what is missing."
 
 Show the recovery screenshot or prepared partial-run replay.
 
-## 1:27-1:30 - Close
+## 1:28-1:30 - Close
 
 "Shot Ledger: how it was made, why it was chosen, and enough proof to continue."
 
@@ -49,6 +51,7 @@ End on the keeper receipt, not a marketing slide.
 ## Capture Checklist
 
 - Real provider images are visible and public-safe.
+- The operator review and public read-only URL are visually distinguishable.
 - Top status reads `Backblaze B2`.
 - Proof scope reads `Live provider evidence reloaded from Backblaze B2`.
 - Decision hash and media/provenance both pass.

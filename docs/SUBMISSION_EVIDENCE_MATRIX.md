@@ -16,11 +16,12 @@ evidence. `PENDING` is not presented as proof.
 | Desktop review clarity | VERIFIED_LOCAL | `proof/ui/shot-ledger-desktop.png` |
 | Mobile review clarity | VERIFIED_LOCAL | `proof/ui/shot-ledger-mobile-top.png` and decision capture |
 | Automated test suite | VERIFIED_LOCAL | 38 Python tests and 11 Worker tests pass; Ruff, typecheck, dependency check, and Worker dry-run pass |
+| Clean-checkout CI | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger/actions/runs/29624677270 |
 | Public source repository | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger |
 | Read-only synthetic preview | VERIFIED_PUBLIC | https://shot-ledger-preview.gigantic-stranger.workers.dev |
 | Public desktop and mobile layout | VERIFIED_PUBLIC | `proof/ui/shot-ledger-public-preview-desktop-full.png` and mobile capture |
-| Real generation through Genblaze | PENDING | OpenAI provider credential is available; scoped B2 setup and the paid three-take run remain |
-| Private object storage in Backblaze B2 | PENDING | Requires completed B2 account and bucket key |
+| Real generation through Genblaze | PENDING | OpenAI credential is recorded in 1Password; the read-only auth preflight and paid three-take run remain |
+| Private object storage in Backblaze B2 | PENDING | B2 account is active; the private bucket and scoped key are not yet created |
 | Fresh-process reload of seven B2 objects | PENDING | Runs immediately after the real decision is sealed |
 | Read-only public B2 demo | PENDING | Promote the verified Worker from synthetic preview to B2 secrets after the real receipt passes |
 | Sub-three-minute demo video | PENDING | Record against the public B2 proof |
