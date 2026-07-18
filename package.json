@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:public": ".venv/bin/python -m shot_ledger.export_worker_demo",
+    "build:public": ".venv/bin/python -m shot_ledger.proof_local && .venv/bin/python -m shot_ledger.export_worker_demo",
     "types": "wrangler types worker-configuration.d.ts --env production",
     "typecheck": "tsc --noEmit",
     "test:worker": "vitest run worker/test",
