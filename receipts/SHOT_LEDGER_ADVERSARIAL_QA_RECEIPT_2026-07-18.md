@@ -31,6 +31,10 @@ verified receipt if the B2 decision object changed after verification.
 - TypeScript typecheck passed.
 - Dependency audit found zero vulnerabilities at the configured gate.
 - Worker dry run passed.
+- Hardened synthetic Worker version
+  `a87b4be7-1ac4-4b1c-87ea-4a7cd648b533` deployed successfully.
+- Live preview health, scene, export, three assets, POST 403, and unsupported
+  method 405 checks passed.
 
 ## Decision
 

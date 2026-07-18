@@ -47,6 +47,23 @@ was read-only to anonymous users.
 - Real Genblaze/B2 evidence remains pending and is not inferred from this local
   adversarial proof.
 
+## Public Preview Replay
+
+The hardened Worker was deployed to the synthetic preview after pinning the
+project to its existing Cloudflare account. Live replay verified:
+
+- URL: https://shot-ledger-preview.gigantic-stranger.workers.dev
+- Worker version: `a87b4be7-1ac4-4b1c-87ea-4a7cd648b533`
+- `/healthz`: HTTP 200, `mode=local`, `write_enabled=false`
+- `/api/scene`: HTTP 200 with an explicit synthetic-not-B2 proof label
+- `/api/export`: HTTP 200 with the same packet hash and three takes
+- `/api/decision` POST: HTTP 403
+- unsupported API method: HTTP 405
+- all three preview assets: HTTP 200, `image/png`
+
+This verifies the public fallback and read-only boundary. It remains separate
+from the pending production B2 deployment.
+
 ## Decision
 
 `CONTINUE_TO_SCOPED_B2_PREFLIGHT`

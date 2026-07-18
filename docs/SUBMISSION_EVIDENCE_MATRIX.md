@@ -18,7 +18,7 @@ evidence. `PENDING` is not presented as proof.
 | Automated test suite | VERIFIED_LOCAL | 42 Python tests and 15 Worker tests pass; Ruff, typecheck, dependency check, and Worker dry-run pass |
 | Clean-checkout CI | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger/actions/runs/29665677838 |
 | Public source repository | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger |
-| Read-only synthetic preview | VERIFIED_PUBLIC | https://shot-ledger-preview.gigantic-stranger.workers.dev |
+| Read-only synthetic preview | VERIFIED_PUBLIC | https://shot-ledger-preview.gigantic-stranger.workers.dev - Worker version `a87b4be7-1ac4-4b1c-87ea-4a7cd648b533`; live POST 403 and method 405 replay passed |
 | Public desktop and mobile layout | VERIFIED_PUBLIC | `proof/ui/shot-ledger-public-preview-desktop-full.png` and mobile capture |
 | Real generation through Genblaze | PENDING | OpenAI credential is recorded in 1Password; the read-only auth preflight and paid three-take run remain |
 | Private object storage in Backblaze B2 | VERIFIED_INFRA_PARTIAL | Private `us-east-005` proof bucket created July 18 with default B2 encryption enabled; the bucket-scoped application key and authenticated preflight remain pending |

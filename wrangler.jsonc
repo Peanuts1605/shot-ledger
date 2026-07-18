@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "shot-ledger-preview",
+  "account_id": "68df73985c906dbd9bdfc82dd7b2c58a",
   "main": "worker/src/index.ts",
   "compatibility_date": "2026-07-17",
   "compatibility_flags": ["nodejs_compat"],
