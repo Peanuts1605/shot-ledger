@@ -84,6 +84,7 @@ and run:
 
 ```bash
 .venv/bin/pip install -e '.[dev,real]'
+.venv/bin/python -m shot_ledger.preflight_real_proof
 .venv/bin/python -m shot_ledger.real_proof
 ```
 
@@ -91,6 +92,11 @@ and run:
 `gpt-image-2` by default. `SHOT_LEDGER_PROVIDER=gmi` keeps the GMI Cloud route
 available. Only the selected provider credential is required; both routes use
 the same Genblaze pipeline, provenance manifest, retry state, and B2 sink.
+
+The preflight is read-only. It verifies the selected provider credential,
+confirms the configured model exists, and opens the private B2 bucket without
+uploading an object or starting paid generation. Its receipt must say
+`ready_for_spend_approval` before the three-take command runs.
 
 The command generates three controlled takes through Genblaze, stores every
 asset and manifest in B2, and downloads the exact B2-backed images to
