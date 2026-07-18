@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+import pytest
 from genblaze_core import StepStatus
 
 from shot_ledger import real_proof
@@ -89,3 +90,35 @@ def test_real_generation_checkpoints_each_paid_take(monkeypatch):
     assert retried.complete is True
     assert len(retry_store.saved) == 2
     assert retried.slots[0].attempts == 1
+
+
+def test_infrastructure_failure_is_checkpointed_before_later_spend(monkeypatch):
+    class FailingSecondPipeline(FakePipeline):
+        calls = 0
+
+        def run(self, **kwargs):
+            self.__class__.calls += 1
+            if self.__class__.calls == 2:
+                raise RuntimeError("B2 manifest upload failed")
+            return _result(1)
+
+    FailingSecondPipeline.calls = 0
+    store = FakeStateStore()
+    monkeypatch.setattr(real_proof, "Pipeline", FailingSecondPipeline)
+    monkeypatch.setattr(real_proof, "_generation_storage_sink", lambda: object())
+    monkeypatch.setattr(real_proof, "_provider", lambda: object())
+    monkeypatch.setattr(
+        real_proof,
+        "_provider_settings",
+        lambda: ("test-model", {"size": "1024x1280"}),
+    )
+
+    with pytest.raises(RuntimeError, match="later takes were not started"):
+        real_proof._generate_pending(real_proof._initial_state(), store)
+
+    checkpoint = store.saved[-1]
+    assert FailingSecondPipeline.calls == 2
+    assert checkpoint["slots"][0]["status"] == "succeeded"
+    assert checkpoint["slots"][1]["status"] == "failed"
+    assert checkpoint["slots"][1]["error_code"] == "pipeline_infrastructure_failure"
+    assert checkpoint["slots"][2]["status"] == "pending"

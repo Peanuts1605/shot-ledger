@@ -144,21 +144,30 @@ def _generate_pending(
         # paid take from closing the B2 client needed by its siblings.
         storage = _generation_storage_sink()
         prompt = f"{BRIEF} Lighting: {slot.changed_value}."
-        result = (
-            Pipeline("shot-ledger-controlled-lighting")
-            .step(
-                provider,
-                model=model,
-                prompt=prompt,
-                modality=Modality.IMAGE,
-                **parameters,
+        try:
+            result = (
+                Pipeline("shot-ledger-controlled-lighting")
+                .step(
+                    provider,
+                    model=model,
+                    prompt=prompt,
+                    modality=Modality.IMAGE,
+                    **parameters,
+                )
+                .run(
+                    sink=storage,
+                    raise_on_failure=False,
+                    timeout=180,
+                )
             )
-            .run(
-                sink=storage,
-                raise_on_failure=False,
-                timeout=180,
-            )
-        )
+        except Exception as error:
+            error_code = getattr(error, "error_code", None) or "pipeline_infrastructure_failure"
+            state = _replace_slot(state, _failed_slot(slot, error_code, error))
+            state_store.save(state)
+            raise RuntimeError(
+                f"{slot.take_id} failed after the pipeline started; "
+                "checkpoint preserved and later takes were not started"
+            ) from error
         step = result.run.steps[-1]
         if step.status != StepStatus.SUCCEEDED or not step.assets:
             state = _replace_slot(state, _failed_slot(slot, step.error_code, step.error))

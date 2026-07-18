@@ -83,4 +83,11 @@ of the proof reused one sink for all three paid takes, which could leave the
 second and third takes using a closed B2 client. The implementation now creates
 one fresh Genblaze sink per take while keeping the separate generation-state
 backend open for checkpointing and review. A regression test verifies three
-distinct sinks and the full suite passes with 39 tests.
+distinct sinks.
+
+The same review found a second paid-run edge: an infrastructure exception after
+generation but before manifest completion could stop the process while leaving
+the take labeled `pending`. Shot Ledger now checkpoints that take as `failed`
+and halts before any later take starts. The regression test preserves the first
+successful sibling, records the second failure, leaves the third pending, and
+brings the suite to 40 passing tests.
