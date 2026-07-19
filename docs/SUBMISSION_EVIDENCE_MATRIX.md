@@ -27,6 +27,8 @@ evidence. `PENDING` is not presented as proof.
 | Sub-three-minute demo video | PENDING | Record against the public B2 proof |
 | Devpost registration | VERIFIED_EXTERNAL | Registered as a solo entrant on 2026-07-18; Backblaze account email and Genblaze repository star confirmed |
 | Devpost project draft | CAPTCHA_PENDING | Project creation is open at the registered hackathon submission manager; the visual CAPTCHA must be cleared before the draft record is created |
+| Devpost field copy | READY_DRAFT | `docs/DEVPOST_FIELD_MAP_2026-07-18.md` contains paste-ready submission fields and quarantines the three real-proof URLs |
+| Naumio YouTube publishing packet | READY_DRAFT | `docs/NAUMIO_YOUTUBE_PUBLISHING_PACKET_2026-07-18.md` contains final title, description, settings, thumbnail direction, and story beats |
 | Devpost final submission | PENDING | Submit after the real app, B2 receipt, and public demo video URLs are final |
 
 Official deadline and judging criteria are reconciled in
