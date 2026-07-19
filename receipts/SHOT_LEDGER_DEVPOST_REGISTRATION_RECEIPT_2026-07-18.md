@@ -40,7 +40,7 @@ public video fields pending until the capped proof passes.
 
 ## Shared Proof
 
-- Git commit: PENDING
-- Drive path: PENDING
-- Notion URL: PENDING
-- Hash verification: PENDING
+- Git commit: `e07d4f2a1c167413e2fbf17193ac34e8e5a4eeba`
+- Drive path: `/TMN_NAUMIO_HQ/06_DELIVERY/SHOT-LEDGER-DEVPOST-REGISTRATION-2026-07-18/`
+- Notion URL: https://app.notion.com/p/3a2b143d291781d3a8e1dd58369b61e0
+- Hash verification: recorded in `MIRROR_MANIFEST.20260719T030818486Z.json`; reconciled receipt re-mirrored below
