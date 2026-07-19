@@ -34,7 +34,7 @@ and paste the verified fields into the registered Devpost project.
 
 ## Shared Proof
 
-- Git commit: `PENDING_COMMIT`
-- Drive path: `PENDING_MIRROR`
-- Notion URL: `PENDING_NOTION`
-- Hash verification: `PENDING_MIRROR`
+- Git commit: `2201d7808b062a085876c0d213fc9b7e5afd93f2`
+- Drive path: `/TMN_NAUMIO_HQ/06_DELIVERY/SHOT-LEDGER-SUBMISSION-COPY-PACKET-2026-07-18/`
+- Notion URL: https://app.notion.com/p/3a2b143d291781d3a8e1dd58369b61e0
+- Hash verification: recorded in `MIRROR_MANIFEST.20260719T031524500Z.json`; reconciled receipt re-mirrored below
