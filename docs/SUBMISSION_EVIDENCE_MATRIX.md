@@ -25,7 +25,9 @@ evidence. `PENDING` is not presented as proof.
 | Fresh-process reload of seven B2 objects | PENDING | Runs immediately after the real decision is sealed |
 | Read-only public B2 demo | PENDING | Promote the verified Worker from synthetic preview to B2 secrets after the real receipt passes |
 | Sub-three-minute demo video | PENDING | Record against the public B2 proof |
-| Devpost submission | PENDING | Register and submit after links and evidence are final |
+| Devpost registration | VERIFIED_EXTERNAL | Registered as a solo entrant on 2026-07-18; Backblaze account email and Genblaze repository star confirmed |
+| Devpost project draft | CAPTCHA_PENDING | Project creation is open at the registered hackathon submission manager; the visual CAPTCHA must be cleared before the draft record is created |
+| Devpost final submission | PENDING | Submit after the real app, B2 receipt, and public demo video URLs are final |
 
 Official deadline and judging criteria are reconciled in
 `docs/CONTEST_REQUIREMENTS_2026-07-18.md`.
