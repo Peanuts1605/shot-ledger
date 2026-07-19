@@ -52,9 +52,12 @@ def _create_take_image(path: Path, lighting: str) -> str:
 def run(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     takes: list[Take] = []
+    scene_id = "public-safe-travel-mug-001"
 
     for take_id, lighting in LIGHTING_TAKES:
         image_path = output_dir / f"{take_id}.png"
+        asset_uri = f"synthetic://shot-ledger/{scene_id}/{take_id}.png"
+        manifest_uri = f"synthetic://shot-ledger/{scene_id}/{take_id}.manifest.json"
         asset_hash = _create_take_image(image_path, lighting)
         prompt = f"{BRIEF} Lighting: {lighting}."
         parameters = {
@@ -67,7 +70,7 @@ def run(output_dir: Path) -> None:
             .modality(Modality.IMAGE)
             .params(**parameters)
             .status(StepStatus.SUCCEEDED)
-            .asset(image_path.resolve().as_uri(), "image/png", sha256=asset_hash)
+            .asset(asset_uri, "image/png", sha256=asset_hash)
             .build()
         )
         run_record = RunBuilder(f"shot-ledger-{take_id}").add_step(step).build()
@@ -84,15 +87,15 @@ def run(output_dir: Path) -> None:
                 provider="local-proof",
                 model="deterministic-pillow-v1",
                 parameters=parameters,
-                asset_uri=image_path.resolve().as_uri(),
+                asset_uri=asset_uri,
                 asset_sha256=asset_hash,
                 manifest_hash=manifest.canonical_hash,
-                manifest_uri=manifest_path.resolve().as_uri(),
+                manifest_uri=manifest_uri,
             )
         )
 
     packet = build_decision_packet(
-        scene_id="public-safe-travel-mug-001",
+        scene_id=scene_id,
         brief=BRIEF,
         locked_variables={
             "subject": "unbranded stainless-steel travel mug",

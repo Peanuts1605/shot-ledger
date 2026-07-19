@@ -22,7 +22,7 @@ provenance in B2.
 - code repository with setup instructions
 - named AI provider and model
 - explanation of meaningful B2 and Genblaze usage
-- short demo video of roughly three minutes
+- public demo video under three minutes on YouTube, Vimeo, or Youku
 
 ## Judging Criteria
 

@@ -48,9 +48,15 @@ class LocalReviewRepository:
 
     def _read_proof_uri(self, uri: str) -> bytes:
         parsed = urlparse(uri)
-        if parsed.scheme != "file" or parsed.netloc not in {"", "localhost"}:
-            raise ValueError("local proof URI must use the file scheme")
-        path = Path(unquote(parsed.path)).resolve()
+        if parsed.scheme == "synthetic" and parsed.netloc == "shot-ledger":
+            filename = Path(unquote(parsed.path)).name
+            if not filename:
+                raise ValueError("synthetic proof URI must name an artifact")
+            path = (self._proof_root / filename).resolve()
+        elif parsed.scheme == "file" and parsed.netloc in {"", "localhost"}:
+            path = Path(unquote(parsed.path)).resolve()
+        else:
+            raise ValueError("local proof URI must use the file or synthetic scheme")
         try:
             path.relative_to(self._proof_root.resolve())
         except ValueError as error:

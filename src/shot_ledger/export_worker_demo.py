@@ -33,6 +33,10 @@ def export_demo(
     shutil.copy2(local_proof_root / "decision.json", proof_root / "decision.json")
     for take in packet.takes:
         shutil.copy2(local_proof_root / f"{take.take_id}.png", proof_root / f"{take.take_id}.png")
+        shutil.copy2(
+            local_proof_root / f"{take.take_id}.manifest.json",
+            proof_root / f"{take.take_id}.manifest.json",
+        )
 
 
 if __name__ == "__main__":
