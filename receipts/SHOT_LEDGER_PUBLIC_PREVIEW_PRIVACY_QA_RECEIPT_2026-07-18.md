@@ -31,6 +31,7 @@ machine that generated the deterministic proof.
 
 - 42 Python tests passed.
 - 15 Worker tests passed.
+- Clean-checkout CI passed: https://github.com/Peanuts1605/shot-ledger/actions/runs/29670870921
 - Ruff lint and format checks passed.
 - TypeScript typecheck and Wrangler dry run passed.
 - Worker version `2721733a-7d39-484e-b5d9-ba09ab463510` deployed.
@@ -58,7 +59,7 @@ separate from the pending paid Genblaze/B2 proof.
 
 ## Shared Proof
 
-- Git commit: PENDING
-- Drive path: PENDING
-- Notion URL: PENDING
-- Hash verification: PENDING
+- Git commit: `c248427a21a9971653052d643ba69d21ef71855e`
+- Drive path: `/TMN_NAUMIO_HQ/06_DELIVERY/SHOT-LEDGER-PUBLIC-PREVIEW-PRIVACY-QA-2026-07-18/`
+- Notion URL: https://app.notion.com/p/3a2b143d291781d3a8e1dd58369b61e0
+- Hash verification: recorded in `MIRROR_MANIFEST.20260719T025403238Z.json`; reconciled receipt re-mirrored below

@@ -16,7 +16,7 @@ evidence. `PENDING` is not presented as proof.
 | Desktop review clarity | VERIFIED_LOCAL | `proof/ui/shot-ledger-desktop.png` |
 | Mobile review clarity | VERIFIED_LOCAL | `proof/ui/shot-ledger-mobile-top.png` and decision capture |
 | Automated test suite | VERIFIED_LOCAL | 42 Python tests and 15 Worker tests pass; Ruff, typecheck, dependency check, and Worker dry-run pass |
-| Clean-checkout CI | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger/actions/runs/29669740211 |
+| Clean-checkout CI | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger/actions/runs/29670870921 |
 | Public source repository | VERIFIED_PUBLIC | https://github.com/Peanuts1605/shot-ledger |
 | Read-only synthetic preview | VERIFIED_PUBLIC | https://shot-ledger-preview.gigantic-stranger.workers.dev - Worker version `2721733a-7d39-484e-b5d9-ba09ab463510`; live health, scene, download, read-only controls, and no-local-path replay passed |
 | Public desktop and mobile layout | VERIFIED_PUBLIC | `proof/ui/shot-ledger-public-preview-desktop-2026-07-18.png` and `proof/ui/shot-ledger-public-preview-mobile-2026-07-18.png`; 390px mobile replay has no horizontal overflow |
